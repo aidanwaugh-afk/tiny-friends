@@ -3,87 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#EDE8FF">
+<meta name="theme-color" content="#F4F1FF">
 <title>Tiny Friends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#EDE8FF; --ink:#33244F; --soft:#716293; --card:#FFFFFF; --line:#D9D0F5; --accent:#7B61FF;
-  --mic:#33244F; --micInk:#FFFFFF;
+  --bg:#F4F1FF; --ink:#2B2140; --soft:#6F6590; --card:#FFFFFF; --line:#DDD5F5; --accentUI:#7B61FF;
+  --glass:rgba(255,255,255,.56); --glassLine:rgba(255,255,255,.8);
+  --cardW:min(86vw, 380px); --cardH:640px;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#1E1731; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; --mic:#F4EEFF; --micInk:#1E1731;
-  }
+  :root:not([data-theme="light"]){ --bg:#17121F; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; }
 }
-:root[data-theme="dark"]{
-  --bg:#1E1731; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; --mic:#F4EEFF; --micInk:#1E1731;
-}
+:root[data-theme="dark"]{ --bg:#17121F; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; }
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none !important}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
-  margin:0; background:var(--bg); color:var(--ink);
+  margin:0; background:var(--bg); color:var(--ink); overflow-x:hidden;
   font-family:"Baloo 2", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size:18px; line-height:1.4; -webkit-tap-highlight-color:transparent;
 }
+button{font:inherit}
 .defs{position:absolute; width:0; height:0; overflow:hidden}
-.wrap{max-width:500px; margin:0 auto; padding:18px 16px 28px; display:flex; flex-direction:column; gap:12px}
-header{display:flex; align-items:center; justify-content:space-between}
-h1{font-size:30px; font-weight:800; margin:0; letter-spacing:-.01em}
-.gear{width:44px; height:44px; border-radius:50%; border:0; background:var(--card); color:var(--ink); display:grid; place-items:center; cursor:pointer}
-.gear svg{width:22px; height:22px}
-.gear:focus-visible,.pick:focus-visible .ring,.mic:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+:focus-visible{outline:3px solid var(--accentUI); outline-offset:3px}
 
-/* picker */
-.picker{display:flex; gap:10px; overflow-x:auto; padding:8px; margin:0 -8px; scrollbar-width:none}
-.picker::-webkit-scrollbar{display:none}
-.pick{flex:0 0 auto; width:78px; border:0; background:none; color:var(--ink); font:inherit;
-  display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:0}
-.pick:focus-visible{outline:none}
-.ring{position:relative; width:68px; height:68px; border-radius:50%; background:#000; overflow:hidden;
-  transition:box-shadow .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
-.ring .char{position:absolute; width:140%; left:-20%; top:-22%; aspect-ratio:240/300}
-.pick span{font-size:15px; font-weight:600}
-.pick[aria-pressed="true"] .ring{box-shadow:0 0 0 3px var(--bg), 0 0 0 6px var(--ink); transform:scale(1.05)}
+/* top bar */
+.top{display:flex; align-items:center; justify-content:space-between; max-width:560px; margin:0 auto; padding:12px 20px 4px}
+.brand{font-size:22px; font-weight:800; margin:0; letter-spacing:-.01em}
+.gear{width:42px; height:42px; border-radius:50%; border:0; background:var(--card); color:var(--ink); display:grid; place-items:center; cursor:pointer;
+  box-shadow:0 6px 16px -10px rgba(40,20,70,.4)}
+.gear svg{width:21px; height:21px}
 
-/* screen */
-.screen{
-  --glow:rgba(246,160,190,.42);
-  position:relative; width:100%; max-width:360px; margin:4px auto 0; aspect-ratio:1/0.98;
-  border-radius:46px; overflow:hidden; isolation:isolate;
-  background:radial-gradient(90% 58% at 50% 100%, var(--glow), transparent 72%), #000;
-  box-shadow:0 0 0 7px #1c1921, 0 0 0 9px #57525f, 0 26px 50px -22px rgba(40,20,70,.6);
-  transition:background .5s;
+/* deck of cards */
+.deck{display:flex; gap:14px; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none;
+  padding:10px calc(50vw - var(--cardW) / 2) 14px; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
+.deck::-webkit-scrollbar{display:none}
+.card{
+  --shade:rgba(120,60,120,.45);
+  position:relative; flex:0 0 var(--cardW); height:var(--cardH); border-radius:36px; overflow:hidden; isolation:isolate;
+  scroll-snap-align:center; scroll-snap-stop:always; color:#2B2140;
+  background:
+    radial-gradient(90% 55% at 50% 40%, rgba(255,255,255,.62), rgba(255,255,255,0) 70%),
+    linear-gradient(165deg, var(--c1) 0%, var(--c2) 100%);
+  box-shadow:0 26px 44px -28px var(--shade), inset 0 0 0 1px rgba(255,255,255,.55);
+  transform:scale(.92); filter:saturate(.8); opacity:.85;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1), filter .5s, opacity .5s;
 }
-.screen::before{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:3;
-  background:linear-gradient(165deg, rgba(255,255,255,.11) 0%, rgba(255,255,255,0) 32%)}
-.screen::after{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:3; opacity:0;
-  box-shadow:inset 0 0 0 2.5px rgba(255,255,255,.85), inset 0 0 46px var(--glow); transition:opacity .3s}
-.screen.listening::after{animation:listen 1.5s ease-in-out infinite}
-.dots{position:absolute; top:13%; right:13%; display:flex; gap:5px; z-index:4; opacity:0; transform:scale(.6); transition:opacity .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
-.dots i{width:8px; height:8px; border-radius:50%; background:#fff; animation:dot 1s ease-in-out infinite}
-.dots i:nth-child(2){animation-delay:.15s} .dots i:nth-child(3){animation-delay:.3s}
-.screen.thinking .dots{opacity:.9; transform:scale(1)}
+.card.active{transform:none; filter:none; opacity:1}
+.title{position:absolute; top:0; left:0; right:0; padding:22px 22px 0; text-align:center; z-index:1}
+.name{margin:0; font-size:48px; font-weight:800; line-height:1; letter-spacing:-.02em;
+  background:linear-gradient(100deg, var(--nA), var(--nB)); -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(255,255,255,.7))}
+.desc{margin:8px auto 0; max-width:25ch; font-size:15px; line-height:1.35; color:rgba(43,33,64,.7)}
 
-.hero{position:absolute; left:0; width:100%; top:6%; aspect-ratio:240/300; z-index:1}
-.char{position:relative}
-.hero .char{position:absolute; inset:0}
+.stage{position:absolute; inset:0; pointer-events:none}
+.stage .char{position:absolute}
+.card.active .stage .char{pointer-events:auto; cursor:pointer}
+.aura{position:absolute; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.85) 0%, rgba(255,255,255,.35) 38%, rgba(255,255,255,0) 68%); transition:transform .5s}
+.card.listening .aura{animation:auraPulse 1.4s ease-in-out infinite}
+.think{position:absolute; display:flex; gap:5px; opacity:0; transform:scale(.6); pointer-events:none;
+  transition:opacity .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
+.think i{width:9px; height:9px; border-radius:50%; background:var(--accent); animation:dot 1s ease-in-out infinite}
+.think i:nth-child(2){animation-delay:.15s} .think i:nth-child(3){animation-delay:.3s}
+.card.thinking .think{opacity:1; transform:scale(1)}
+
+.fabs{position:absolute; right:14px; display:flex; flex-direction:column; gap:10px; z-index:3}
+.fab{width:44px; height:44px; border-radius:50%; border:1px solid var(--glassLine); background:var(--glass); color:var(--accent);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4); backdrop-filter:blur(14px) saturate(1.4);
+  display:grid; place-items:center; cursor:pointer; padding:0; box-shadow:0 8px 18px -10px rgba(40,20,70,.45);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), background .25s, color .25s}
+.fab svg{width:20px; height:20px}
+.fab:active{transform:scale(.88)}
+.fab[aria-pressed="true"]{background:var(--accent); color:#fff; border-color:transparent}
+
+.panel{position:absolute; left:12px; right:12px; bottom:12px; z-index:2; padding:14px; border-radius:28px;
+  background:var(--glass); border:1px solid var(--glassLine);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5); backdrop-filter:blur(20px) saturate(1.5);
+  box-shadow:0 12px 30px -20px rgba(40,20,70,.45)}
+.ptop h3{margin:0; font-size:21px; font-weight:800; line-height:1.15}
+.ptop p{margin:1px 0 0; font-size:14px; color:rgba(43,33,64,.62)}
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0}
+.stat{background:rgba(255,255,255,.62); border-radius:16px; padding:8px 4px 6px; text-align:center}
+.stat .v{display:flex; align-items:center; justify-content:center; gap:5px; font-weight:800; font-size:18px; line-height:1}
+.stat .v small{font-size:12px; font-weight:600; color:rgba(43,33,64,.45)}
+.stat svg{width:16px; height:16px; color:var(--accent); flex:none}
+.stat span{display:block; font-size:12.5px; color:rgba(43,33,64,.6); margin-top:3px; line-height:1.1}
+.cta{position:relative; width:100%; height:56px; border:0; border-radius:999px; font-weight:700; font-size:18px; cursor:pointer;
+  background:linear-gradient(100deg, var(--accent), var(--accent2)); color:var(--ctaInk);
+  display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 12px 24px -14px var(--accent);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.cta:active{transform:scale(.97)}
+.cta svg{width:22px; height:22px; flex:none}
+.cta .i-stop{display:none}
+.card.thinking .cta .i-mic{display:none} .card.thinking .cta .i-stop{display:block}
+.cta::after{content:""; position:absolute; inset:-6px; border-radius:inherit; border:2.5px solid var(--accent); opacity:0; pointer-events:none}
+.card.listening .cta::after{animation:halo 1.4s ease-out infinite}
+
+.pager{display:flex; justify-content:center; gap:2px; padding:0 0 4px}
+.pager button{width:22px; height:22px; border:0; background:none; padding:0; cursor:pointer; display:grid; place-items:center}
+.pager button::before{content:""; width:8px; height:8px; border-radius:99px; background:var(--soft); opacity:.35; transition:width .35s, opacity .35s, background .35s}
+.pager button[aria-current="true"]::before{width:22px; opacity:1; background:var(--ink)}
+.fine{text-align:center; font-size:12.5px; color:var(--soft); margin:2px 0 14px}
+
+.toast{position:fixed; left:50%; top:calc(env(safe-area-inset-top,0px) + 64px); z-index:15; max-width:min(92vw,420px);
+  background:rgba(30,22,48,.9); color:#fff; font-size:15px; line-height:1.35; padding:10px 16px; border-radius:18px; text-align:center;
+  opacity:0; transform:translate(-50%,-10px); transition:opacity .25s, transform .35s cubic-bezier(.2,.9,.3,1.2); pointer-events:none}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+/* character rig */
 .char .L,.char .rig,.char .face{position:absolute; inset:0; width:100%; height:100%}
 .char img.L{display:block; user-select:none; -webkit-user-drag:none; pointer-events:none}
-.face{overflow:visible}
+.face{overflow:visible; pointer-events:none}
 .eye,.mouth{transform-box:fill-box; transform-origin:center}
 .eye{transition:transform .07s ease-in}
 .look{transition:transform .22s cubic-bezier(.3,.7,.3,1)}
 .mouth{opacity:0; transition:transform .08s ease-out, opacity .1s}
 .smile{transition:opacity .1s}
-
-/* hero-only motion */
 .hero .breathe{transform-origin:50% 100%; animation:breathe 4.2s ease-in-out infinite}
 .hero .sway{animation:sway 7s ease-in-out infinite}
 .hero .pose{transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
@@ -106,117 +148,89 @@ h1{font-size:30px; font-weight:800; margin:0; letter-spacing:-.01em}
 .hero.talking .armL{animation:flapL .5s ease-in-out infinite alternate}
 .hero.talking .armR{animation:flapR .5s ease-in-out infinite alternate}
 .hero .k-ghost .breathe{animation:float 3.6s ease-in-out infinite}
-.hero .aura{animation:aura 3.6s ease-in-out infinite}
+.hero .aura-g{animation:aura 3.6s ease-in-out infinite}
 .hero.talking .mouth{opacity:1}
 .hero.talking .smile{opacity:0}
-.hero .char.enter{animation:enter .6s cubic-bezier(.34,1.56,.64,1) both}
-.hero .char.exit{animation:exit .17s ease-in both}
-
-.nameplate{text-align:center; margin-top:6px}
-.who{font-size:24px; font-weight:800; margin:0}
-.tag{margin:-4px 0 0; font-size:15px; color:var(--soft)}
-.bubble{position:relative; background:var(--card); color:var(--ink); border-radius:22px; padding:14px 16px; min-height:56px; font-size:18px}
-.bubble::before{content:""; position:absolute; top:-9px; left:50%; margin-left:-10px; border:10px solid transparent; border-top:0; border-bottom-color:var(--card)}
-.bubble.quiet{color:var(--soft)}
-.heard{min-height:24px; color:var(--soft); font-size:16px; text-align:center; margin:0}
-
-.controls{display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:4px}
-.mic{position:relative; width:92px; height:92px; border-radius:50%; border:0; cursor:pointer; background:var(--mic); color:var(--micInk);
-  display:grid; place-items:center; transition:transform .2s cubic-bezier(.34,1.56,.64,1); touch-action:manipulation}
-.mic:active{transform:scale(.93)}
-.mic svg{width:38px; height:38px; grid-area:1/1}
-.mic .i-stop{display:none}
-.mic.thinking .i-mic{display:none} .mic.thinking .i-stop{display:block}
-.mic::after{content:""; position:absolute; inset:-9px; border-radius:50%; border:3px solid var(--ink); opacity:0; pointer-events:none}
-.mic.listening::after{animation:halo 1.4s ease-out infinite}
-.status{font-size:16px; color:var(--soft); margin:0; text-align:center; min-height:22px}
-.toggle{display:flex; align-items:center; gap:8px; font-size:16px; color:var(--soft); cursor:pointer}
-.toggle input{width:20px; height:20px; accent-color:var(--ink)}
-
-/* sheets */
-.sheet-wrap{position:fixed; inset:0; z-index:20; background:rgba(20,12,40,.55); display:flex; align-items:flex-end; justify-content:center;
-  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
-.sheet{width:100%; max-width:480px; background:var(--card); color:var(--ink); border-radius:28px; padding:22px 20px 20px; animation:sheet .35s cubic-bezier(.2,.9,.3,1.1)}
-.sheet h2{font-size:22px; margin:0 0 6px; line-height:1.2}
-.sheet p{margin:0 0 12px; color:var(--soft); font-size:16px}
-.sheet ol{margin:0 0 14px; padding-left:22px; font-size:16px} .sheet li{margin-bottom:6px}
-.sheet a{color:var(--accent)}
-.sheet input{width:100%; font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:2px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:10px}
-.sheet input:focus-visible{outline:none; border-color:var(--ink)}
-.btns{display:flex; gap:8px; flex-wrap:wrap}
-.btn{font:inherit; font-weight:600; font-size:17px; border:0; border-radius:999px; padding:10px 20px; cursor:pointer; background:var(--ink); color:var(--bg)}
-.btn.ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 2px var(--line)}
-.err{color:#D2466A; font-size:15px; margin:0 0 10px; min-height:0}
+.char.hop{animation:hop .6s cubic-bezier(.34,1.56,.64,1)}
 
 @keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.008,1.02)}}
 @keyframes sway{0%,100%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5%)}}
 @keyframes aura{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes auraPulse{0%,100%{transform:scale(1); opacity:.8}50%{transform:scale(1.1); opacity:1}}
 @keyframes tuft{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
 @keyframes twitchL{0%,100%{transform:rotate(0)}30%{transform:rotate(-11deg)}60%{transform:rotate(4deg)}}
 @keyframes twitchR{0%,100%{transform:rotate(0)}30%{transform:rotate(11deg)}60%{transform:rotate(-4deg)}}
 @keyframes flapL{from{transform:rotate(0)}to{transform:rotate(-16deg)}}
 @keyframes flapR{from{transform:rotate(0)}to{transform:rotate(16deg)}}
-@keyframes enter{from{transform:translateY(14%) scale(.72); opacity:0}to{transform:none; opacity:1}}
-@keyframes exit{to{transform:translateY(8%) scale(.86); opacity:0}}
-@keyframes listen{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes hop{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-4%) scale(1.03,.97)}70%{transform:translateY(0) scale(.98,1.02)}100%{transform:none}}
 @keyframes dot{0%,100%{transform:translateY(0); opacity:.5}50%{transform:translateY(-5px); opacity:1}}
-@keyframes halo{0%{opacity:.55; transform:scale(.92)}100%{opacity:0; transform:scale(1.28)}}
+@keyframes halo{0%{opacity:.6; transform:scale(.98)}100%{opacity:0; transform:scale(1.08,1.35)}}
 @keyframes sheet{from{transform:translateY(24px); opacity:0}to{transform:none; opacity:1}}
+
+/* sheets */
+.sheet-wrap{position:fixed; inset:0; z-index:20; background:rgba(20,12,40,.55); display:flex; align-items:flex-end; justify-content:center;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet{width:100%; max-width:480px; max-height:100%; overflow:auto; background:var(--card); color:var(--ink); border-radius:28px; padding:22px 20px 20px; animation:sheet .35s cubic-bezier(.2,.9,.3,1.1)}
+.sheet h2{font-size:22px; margin:0 0 6px; line-height:1.2}
+.sheet p{margin:0 0 12px; color:var(--soft); font-size:16px}
+.sheet ol{margin:0 0 14px; padding-left:22px; font-size:16px} .sheet li{margin-bottom:6px}
+.sheet a{color:var(--accentUI)}
+.sheet input{width:100%; font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:2px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:10px}
+.sheet input:focus-visible{outline:none; border-color:var(--ink)}
+.field{display:block; font-size:15px; font-weight:600; margin:10px 0 4px}
+.field em{font-style:normal; font-weight:500; color:var(--soft)}
+.hint{font-size:14px !important; margin:-4px 0 8px !important}
+.btns{display:flex; gap:8px; flex-wrap:wrap}
+.btn{font-weight:600; font-size:17px; border:0; border-radius:999px; padding:10px 20px; cursor:pointer; background:var(--ink); color:var(--bg)}
+.btn.ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 2px var(--line)}
+.err{color:#D2466A !important; font-size:15px !important; margin:0 0 10px !important}
+
 @media (prefers-reduced-motion: reduce){
-  .hero .breathe,.hero .sway,.hero .tuft,.hero .leaf,.hero .aura,.hero .k-ghost .breathe,
-  .hero.talking .wingL,.hero.talking .wingR,.hero.talking .armL,.hero.talking .armR,.dots i{animation:none}
-  .screen.listening::after{animation:none; opacity:.8}
-  .mic.listening::after{animation:none; opacity:.5}
-  .hero .char.enter,.hero .char.exit{animation-duration:.01s}
+  .hero .breathe,.hero .sway,.hero .tuft,.hero .leaf,.hero .aura-g,.hero .k-ghost .breathe,
+  .hero.talking .wingL,.hero.talking .wingR,.hero.talking .armL,.hero.talking .armR,.think i,.char.hop{animation:none}
+  .card.listening .aura{animation:none; transform:scale(1.08)}
+  .card.listening .cta::after{animation:none; opacity:.6}
+  .card{transition:none}
 }
 </style>
 </head>
 <body>
-<svg class="defs" aria-hidden="true" focusable="false"><defs>
-  <radialGradient id="bead" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#5d5a67"/><stop offset=".5" stop-color="#17151d"/><stop offset="1" stop-color="#040306"/></radialGradient>
+<svg class="defs" aria-hidden="true" focusable="false"><defs id="globalDefs">
   <linearGradient id="beak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC286"/><stop offset=".6" stop-color="#FF9A45"/><stop offset="1" stop-color="#E0742A"/></linearGradient>
   <linearGradient id="gape" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1424"/><stop offset="1" stop-color="#6B2A40"/></linearGradient>
 </defs></svg>
 
-<main class="wrap">
-  <header>
-    <h1>Tiny Friends</h1>
-    <button class="gear" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
-  </header>
+<header class="top">
+  <h1 class="brand">Tiny Friends</h1>
+  <button class="gear" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</header>
 
-  <div class="picker" id="picker" role="group" aria-label="Choose a friend"></div>
-
-  <div class="screen" id="screen">
-    <div class="hero" id="hero"></div>
-    <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
-  </div>
-  <div class="nameplate"><p class="who" id="who"></p><p class="tag" id="tag"></p></div>
-  <div class="bubble quiet" id="bubble" aria-live="polite"></div>
-  <p class="heard" id="heard"></p>
-
-  <div class="controls">
-    <button class="mic" id="mic" aria-label="Tap to talk">
-      <svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
-      <svg class="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="currentColor"/></svg>
-    </button>
-    <p class="status" id="status">Tap to talk</p>
-    <label class="toggle"><input type="checkbox" id="keepGoing" checked> Keep the conversation going</label>
-  </div>
+<main>
+  <div class="deck" id="deck" aria-label="Friends. Swipe to pick one."></div>
+  <nav class="pager" id="pager" aria-label="Choose a friend"></nav>
+  <p class="fine">Friends' voices are AI-generated.</p>
 </main>
 
-<!-- one-time API key setup -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- keys -->
 <div class="sheet-wrap" id="keySheet" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="keyTitle">
-    <h2 id="keyTitle">One-time setup</h2>
-    <p>Paste your Anthropic API key so your friends can think. It stays in this browser and only goes to Anthropic. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
-    <input id="keyIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Anthropic API key">
+    <h2 id="keyTitle">Setup</h2>
+    <label class="field" for="keyIn">Anthropic API key <em>for their brains</em></label>
+    <input id="keyIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+    <p class="hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a></p>
+    <label class="field" for="oaIn">OpenAI API key <em>for their voices</em></label>
+    <input id="oaIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-…">
+    <p class="hint">Gives every friend a natural, expressive studio voice. Get one at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>. Leave it empty to use your phone's basic voice.</p>
     <p class="err" id="keyErr"></p>
     <div class="btns">
-      <button class="btn" id="keySave">Save key</button>
-      <button class="btn ghost" id="keyForget" hidden>Remove key</button>
+      <button class="btn" id="keySave">Save</button>
       <button class="btn ghost" id="keyClose" hidden>Close</button>
+      <button class="btn ghost" id="keyForget" hidden>Remove keys</button>
     </div>
+    <p class="hint" style="margin-top:12px !important">Keys stay in this browser. They're only sent to Anthropic and OpenAI.</p>
   </div>
 </div>
 
@@ -239,22 +253,53 @@ const MODEL = "claude-haiku-4-5-20251001";
 const KEY_STORE = "tinyFriends.apiKey";
 
 const FRIENDS = [
-  { id:"mochi", name:"Mochi", tag:"a giggly little bunny", kind:"bunny", glow:"rgba(246,160,190,.44)", pitch:1.9, rate:1.05, v:0,
+  { id:"mochi", name:"Mochi", kind:"bunny", species:"Pink bunny", voiceDesc:"Soft, giggly voice",
+    desc:"Loves naps, snacks and anything soft.", stats:[6,7,10],
+    c1:"#FFE6EE", c2:"#FFB3C9", nA:"#FF4F8B", nB:"#FF9A6B", accent:"#FF5C93", accent2:"#FF8C9E", ctaInk:"#FFFFFF", shade:"rgba(220,80,130,.5)",
+    irisC:["#D69366","#7A3F22"], greeting:"Hehe, hi! I'm Mochi. Tap the big button and talk to me!",
+    pitch:1.9, bpitch:1.45, rate:1.05, v:0,
+    oa:{ voice:"coral", style:"Voice of Mochi, a tiny, sweet cartoon bunny. High, soft and bubbly, with a smile in every word and little giggles. Gentle and cuddly." },
     pal:{ fur:["#FFEEF2","#F5C9D5","#D597AA"], ear:["#FFD6E0","#F4A2B8","#DA7894"], muzzle:["#FFFFFF","#FFF3F6","#F0D4DD"], bow:["#FFC7D7","#FF7FA3","#D5507A"] },
     persona:"Mochi, a tiny pink bunny with a bow. Sweet, giggly, loves snacks, naps and soft things. You sometimes say 'hehe'." },
-  { id:"pip", name:"Pip", tag:"a very excited baby chick", kind:"chick", glow:"rgba(255,214,90,.42)", pitch:2.0, rate:1.2, v:1,
+  { id:"pip", name:"Pip", kind:"chick", species:"Baby chick", voiceDesc:"Bright, squeaky voice",
+    desc:"Gets excited about absolutely everything.", stats:[10,9,7],
+    c1:"#FFF7CF", c2:"#FFD27A", nA:"#FF8A00", nB:"#FF5A3C", accent:"#FFA41B", accent2:"#FFC53D", ctaInk:"#3B2400", shade:"rgba(230,150,40,.55)",
+    irisC:["#C9843F","#5E3212"], greeting:"Hi hi hi! I'm Pip! This is SO exciting! Tap the button and let's talk!",
+    pitch:2.0, bpitch:1.55, rate:1.15, v:1,
+    oa:{ voice:"nova", style:"Voice of Pip, a tiny baby chick cartoon character. Very high, bright and squeaky, bursting with excitement, quick and bouncy." },
     pal:{ fur:["#FFF8D8","#FFE07A","#E7B03C"], belly:["#FFFEF4","#FFF3C4","#F4DA86"], wing:["#FFEAA3","#F5C850","#D69A28"] },
     persona:"Pip, a fluffy baby chick who gets SO excited about everything and talks fast. Everything is the best thing ever." },
-  { id:"bao", name:"Bao", tag:"a sleepy panda", kind:"panda", glow:"rgba(170,215,160,.40)", pitch:1.25, rate:0.88, v:2,
+  { id:"bao", name:"Bao", kind:"panda", species:"Sleepy panda", voiceDesc:"Slow, dreamy voice",
+    desc:"Cozy, calm and always up for a nap.", stats:[2,4,10],
+    c1:"#E4F8F2", c2:"#9FDCCB", nA:"#1F9A80", nB:"#3F72B5", accent:"#23A087", accent2:"#3DB8A0", ctaInk:"#FFFFFF", shade:"rgba(40,150,130,.5)",
+    irisC:["#9A7760","#3A2618"], greeting:"Oh... hello there. I'm Bao. Mmm, let's have a cozy little chat.",
+    pitch:1.25, bpitch:1.1, rate:0.9, v:2,
+    oa:{ voice:"sage", style:"Voice of Bao, a sleepy cartoon panda. Soft, slow, warm and dreamy, a little drowsy, cozy like a lullaby, with the odd small yawn." },
     pal:{ fur:["#FFFFFF","#F6F2EB","#D3CABD"], black:["#5E5664","#2E2834","#15121A"] },
     persona:"Bao, a sleepy, cozy panda. Calm, gentle, a bit dreamy. Loves bamboo, blankets and slow afternoons. You yawn now and then." },
-  { id:"fizz", name:"Fizz", tag:"a cheeky little ghost", kind:"ghost", glow:"rgba(160,170,255,.44)", pitch:1.6, rate:1.12, v:3,
+  { id:"fizz", name:"Fizz", kind:"ghost", species:"Little ghost", voiceDesc:"Playful, sing-song voice",
+    desc:"Friendly, cheeky and full of spooky puns.", stats:[8,8,5],
+    c1:"#EEEBFF", c2:"#BBB3FF", nA:"#6A56E8", nB:"#B363E6", accent:"#6C5CE7", accent2:"#9B6CF0", ctaInk:"#FFFFFF", shade:"rgba(100,80,220,.5)",
+    irisC:["#9C95FF","#3B2FA8"], greeting:"Boo! Hehe, just kidding. I'm Fizz! Wanna hang out? I promise I'm not scary.",
+    pitch:1.6, bpitch:1.35, rate:1.1, v:3,
+    oa:{ voice:"ballad", style:"Voice of Fizz, a small friendly cartoon ghost. Light, airy and playful with a cheeky, teasing sing-song lilt. Mischievous but never scary." },
     pal:{ fur:["#FFFFFF","#DDE1FF","#A4ABE4"] },
     persona:"Fizz, a small friendly ghost. Playful and a bit cheeky, likes gentle spooky puns, but is never actually scary." },
-  { id:"clover", name:"Clover", tag:"a cheerful frog", kind:"frog", glow:"rgba(140,215,120,.42)", pitch:1.45, rate:1.0, v:4,
+  { id:"clover", name:"Clover", kind:"frog", species:"Cheerful frog", voiceDesc:"Bouncy, upbeat voice",
+    desc:"Loves puddles and cheering you on.", stats:[9,8,8],
+    c1:"#F2FBD6", c2:"#B9E487", nA:"#2F9A2A", nB:"#12A08C", accent:"#3A9E32", accent2:"#5DB84A", ctaInk:"#FFFFFF", shade:"rgba(70,150,50,.5)",
+    irisC:["#A7B444","#4B5A16"], greeting:"Hey hey! I'm Clover! You're already doing great. Tap the button and tell me everything!",
+    pitch:1.45, bpitch:1.3, rate:1.0, v:4,
+    oa:{ voice:"shimmer", style:"Voice of Clover, a cheerful little cartoon frog. Bright, bouncy and upbeat, like an enthusiastic best friend cheering you on." },
     pal:{ fur:["#DDF7D0","#9EDB8C","#5A9F4C"], belly:["#FFFFF2","#EEF8D4","#C8DEA0"], leaf:["#C9F2A8","#66C24F","#3B8A30"] },
     persona:"Clover, a cheerful little frog with a tiny clover leaf on her head. Loves rain, puddles and cheering people on. A true hype-frog." }
 ];
+// vertical extent of each character's head (top of ears to chin), in art units
+const EXT = { bunny:[8,182], chick:[40,192], panda:[48,186], ghost:[42,178], frog:[50,194] };
+
+// per-friend iris gradients for the glossy eyes
+document.getElementById("globalDefs").insertAdjacentHTML("beforeend", FRIENDS.map(c =>
+  `<radialGradient id="iris-${c.id}" cx="50%" cy="68%" r="62%"><stop offset="0" stop-color="${c.irisC[0]}"/><stop offset="1" stop-color="${c.irisC[1]}"/></radialGradient>`).join(""));
 
 /* ================= character art =================
    Fur parts are rendered once into SVG images (fur texture, soft shading),
@@ -290,15 +335,15 @@ const sheen = (x,y,rx,ry,op=.3) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="
 const blushSVG = (y,dx,color) => `<g filter="url(#soft)" opacity=".8"><ellipse cx="${100-dx}" cy="${y}" rx="11" ry="7" fill="${color}"/><ellipse cx="${100+dx}" cy="${y}" rx="11" ry="7" fill="${color}"/></g>`;
 const shadow = (x,y,rx,ry,op=.3,rot=0) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#000" opacity="${op}" filter="url(#soft)"${rot ? ` transform="rotate(${rot} ${x} ${y})"` : ""}/>`;
 
-function bead(x,y,r){
-  return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#bead)"/>
-    <circle cx="${x - r*.34}" cy="${y - r*.38}" r="${r*.32}" fill="#fff"/>
-    <circle cx="${x + r*.36}" cy="${y + r*.32}" r="${r*.13}" fill="#fff" opacity=".75"/>
-    <path d="M${x - r*.62} ${y + r*.45} Q${x} ${y + r*.95} ${x + r*.62} ${y + r*.45}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="${r*.18}" stroke-linecap="round"/>`;
+function iris(x, y, r, id){
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#1a1220"/>
+    <circle cx="${x}" cy="${y}" r="${(r*.84).toFixed(2)}" fill="url(#iris-${id})"/>
+    <circle cx="${x}" cy="${(y + r*.06).toFixed(2)}" r="${(r*.44).toFixed(2)}" fill="#0a0610"/>
+    <circle cx="${(x - r*.34).toFixed(2)}" cy="${(y - r*.36).toFixed(2)}" r="${(r*.3).toFixed(2)}" fill="#fff"/>
+    <circle cx="${(x + r*.34).toFixed(2)}" cy="${(y + r*.3).toFixed(2)}" r="${(r*.13).toFixed(2)}" fill="#fff" opacity=".85"/>
+    <path d="M${(x - r*.6).toFixed(2)} ${(y + r*.5).toFixed(2)} Q${x} ${(y + r*.92).toFixed(2)} ${(x + r*.6).toFixed(2)} ${(y + r*.5).toFixed(2)}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="${(r*.14).toFixed(2)}" stroke-linecap="round"/>`;
 }
-const eyePair = (a, b, r, ring) => `<g class="look">
-  <g class="eye">${ring ? `<circle cx="${a[0]}" cy="${a[1]}" r="${r+1.8}" fill="#EDE8F2"/>` : ""}${bead(a[0],a[1],r)}</g>
-  <g class="eye">${ring ? `<circle cx="${b[0]}" cy="${b[1]}" r="${r+1.8}" fill="#EDE8F2"/>` : ""}${bead(b[0],b[1],r)}</g></g>`;
+const eyePair = (a, b, r, c) => `<g class="look"><g class="eye">${iris(a[0],a[1],r,c.id)}</g><g class="eye">${iris(b[0],b[1],r,c.id)}</g></g>`;
 const smileSVG = (y,w,color) => `<path class="smile" d="M${100-w} ${y} Q100 ${y + w*.9} ${100+w} ${y}" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round"/>`;
 const mouthSVG = (y,rx,fill) => `<g class="mouth"><ellipse cx="100" cy="${y}" rx="${rx}" ry="4.6" fill="${fill || "url(#gape)"}"/><ellipse cx="100" cy="${y+2.4}" rx="${rx*.55}" ry="1.7" fill="#FF8FA6"/></g>`;
 
@@ -315,7 +360,7 @@ function rig(c){
         { cls:"bow", src:L("", `<g transform="translate(134 80) rotate(16)">${shadow(0,3,17,8,.25)}
             <path d="M0 0 C-7 -10 -19 -9 -17 1 C-16 10 -5 7 0 0Z" fill="${F("bow")}"/><path d="M0 0 C7 -10 19 -9 17 1 C16 10 5 7 0 0Z" fill="${F("bow")}"/>
             <circle r="3.8" fill="#E2638A"/><path d="M-13 -3 q4 -3.6 8 -.6" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" fill="none" stroke-linecap="round"/></g>`) }
-      ], face:`${eyePair([80,121],[120,121],6)}
+      ], face:`${eyePair([79,120],[121,120],8.5,c)}
         <path d="M95.5 133 Q100 129.5 104.5 133 Q100 138.5 95.5 133Z" fill="#E27C98"/>
         ${smileSVG(142,5,"#3A2530")}${mouthSVG(146,5)}` },
       front:[] };
@@ -325,7 +370,7 @@ function rig(c){
         { cls:"tuft", origin:[104,68], src:L(`<ellipse cx="93" cy="57" rx="4.5" ry="13" fill="${F("fur")}" transform="rotate(-26 93 57)"/><ellipse cx="101" cy="51" rx="5" ry="15" fill="${F("fur")}" transform="rotate(-6 101 51)"/><ellipse cx="109" cy="52" rx="4.5" ry="14" fill="${F("fur")}" transform="rotate(12 109 52)"/><ellipse cx="116" cy="59" rx="4" ry="11" fill="${F("fur")}" transform="rotate(30 116 59)"/>`) },
         { cls:"head", src:L(`<ellipse cx="100" cy="138" rx="76" ry="74" fill="${F("fur")}"/><ellipse cx="100" cy="180" rx="42" ry="30" fill="${F("belly")}"/>`,
             blushSVG(136,40,"#FF9A6E") + sheen(78,92,24,12)) }
-      ], face:`${eyePair([80,118],[120,118],6.5)}
+      ], face:`${eyePair([77,113],[123,113],8.5,c)}
         ${mouthSVG(138,5,"#9C3E16")}
         <path d="M89 130 Q100 119 111 130 Q100 136.5 89 130Z" fill="url(#beak)"/>
         <path d="M95 126 Q100 123 104 125" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/>` },
@@ -340,18 +385,18 @@ function rig(c){
         { cls:"earR", origin:[140,86], src:L(`<circle cx="150" cy="70" r="21" fill="${F("black")}"/>`) },
         { cls:"head", src:L(`<ellipse cx="100" cy="126" rx="68" ry="60" fill="${F("fur")}"/><ellipse cx="76" cy="124" rx="15" ry="20" fill="${F("black")}" transform="rotate(30 76 124)"/><ellipse cx="124" cy="124" rx="15" ry="20" fill="${F("black")}" transform="rotate(-30 124 124)"/>`,
             blushSVG(149,46,"#FF95AE") + sheen(84,90,22,10,.35)) }
-      ], face:`${eyePair([78,122],[122,122],5,true)}
+      ], face:`${eyePair([78,122],[122,122],6.8,c)}
         <ellipse cx="100" cy="143" rx="7" ry="4.6" fill="url(#bead)"/><ellipse cx="98" cy="141.6" rx="2.4" ry="1.2" fill="#fff" opacity=".6"/>
         ${smileSVG(151,5,"#2E2834")}${mouthSVG(155,5)}` },
       front:[] };
     case "ghost": return {
-      back:[{ cls:"aura", src:L("", `<ellipse cx="100" cy="116" rx="76" ry="74" fill="#AEB8FF" opacity=".5" filter="url(#glow)"/>`) }],
+      back:[{ cls:"aura-g", src:L("", `<ellipse cx="100" cy="116" rx="76" ry="74" fill="#AEB8FF" opacity=".5" filter="url(#glow)"/>`) }],
       head:{ origin:[100,176], layers:[
         { cls:"head", src:L(`<path d="M36 122 Q36 42 100 42 Q164 42 164 122 L164 172 Q153.3 188 142.7 172 Q132 188 121.3 172 Q110.7 188 100 172 Q89.3 188 78.7 172 Q68 188 57.3 172 Q46.7 188 36 172 Z" fill="${F("fur")}"/>`,
             blushSVG(122,35,"#FF9EC4") + sheen(80,70,24,12,.4)) },
         { cls:"armL", origin:[46,124], src:L(`<ellipse cx="34" cy="132" rx="9" ry="15" fill="${F("fur")}" transform="rotate(42 34 132)"/>`) },
         { cls:"armR", origin:[154,124], src:L(`<ellipse cx="166" cy="132" rx="9" ry="15" fill="${F("fur")}" transform="rotate(-42 166 132)"/>`) }
-      ], face:`${eyePair([82,106],[118,106],6)}${smileSVG(123,5,"#353061")}${mouthSVG(127,5)}` },
+      ], face:`${eyePair([80,104],[120,104],8.5,c)}${smileSVG(123,5,"#353061")}${mouthSVG(127,5)}` },
       front:[] };
     case "frog": return {
       back:[{ cls:"body", src:L(`<ellipse cx="100" cy="216" rx="74" ry="52" fill="${F("fur")}"/><ellipse cx="100" cy="226" rx="46" ry="38" fill="${F("belly")}"/>${shadow(100,190,64,14)}`) }],
@@ -363,7 +408,7 @@ function rig(c){
             <path d="M100 76 C92 80 82 79 81 73 C81 70 84 69 86 70 C84 69 82 66 85 64 C89 61 97 67 100 76Z"/>
             <path d="M100 76 C108 80 118 79 119 73 C119 70 116 69 114 70 C116 69 118 66 115 64 C111 61 103 67 100 76Z"/></g>
             <path d="M97 62 q2 -2 4 0" stroke="#fff" stroke-opacity=".5" stroke-width="1.2" fill="none" stroke-linecap="round"/>`) }
-      ], face:`${eyePair([66,76],[134,76],8.5)}
+      ], face:`${eyePair([66,76],[134,76],10,c)}
         <path class="smile" d="M84 146 Q100 159 116 146" fill="none" stroke="#2C5526" stroke-width="2.5" stroke-linecap="round"/>
         ${mouthSVG(151,7)}` },
       front:[] };
@@ -390,61 +435,169 @@ function charHTML(c){
 
 /* ================= page ================= */
 const $ = id => document.getElementById(id);
-const picker=$("picker"), screen=$("screen"), hero=$("hero"), who=$("who"), tag=$("tag"),
-      bubble=$("bubble"), heard=$("heard"), micBtn=$("mic"), statusEl=$("status"), keepGoing=$("keepGoing");
-
+const deck = $("deck"), pager = $("pager"), toastEl = $("toast");
+const KEY_OA = "tinyFriends.openaiKey";
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
   del(k){ try { localStorage.removeItem(k); } catch(e){} }
 };
-keepGoing.checked = store.get("tinyFriends.keepGoing") !== "0";
-keepGoing.onchange = () => store.set("tinyFriends.keepGoing", keepGoing.checked ? "1" : "0");
+let keepGoing = store.get("tinyFriends.keepGoing") !== "0";
 
-let current = FRIENDS[0];
+let current = FRIENDS[0], currentIndex = 0;
 const histories = {};
 let state = "idle";          // idle | listening | thinking | talking
 let session = false;         // true while a back-and-forth conversation is running
 let ctl = null, streamDone = true, quietRetries = 0;
 
-FRIENDS.forEach(c => {
-  const b = document.createElement("button");
-  b.className = "pick"; b.type = "button"; b.dataset.id = c.id;
-  b.innerHTML = `<div class="ring">${charHTML(c)}</div><span>${c.name}</span>`;
-  b.onclick = () => choose(c);
-  picker.appendChild(b);
-});
+const ICON = {
+  mic:'<svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  stop:'<svg class="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="currentColor"/></svg>',
+  hi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  loop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',
+  reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.5 21l4.3-2.3c1 .2 2.1.3 3.2.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.9 4.5c2.1 0 3.6 1.2 5.1 3 1.5-1.8 3-3 5.1-3 3.9 0 6 3.9 4.5 7.3C19.5 16.4 12 21 12 21z"/></svg>'
+};
 
-function choose(c, first){
-  stopEverything();
-  current = c;
-  document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === c.id));
-  who.textContent = c.name;
-  tag.textContent = c.tag;
-  screen.style.setProperty("--glow", c.glow);
-  const h = histories[c.id];
-  const last = h && [...h].reverse().find(t => t.role === "assistant");
-  bubble.textContent = last ? last.content : `Hi, I'm ${c.name}! Tap the mic and talk to me.`;
-  bubble.classList.toggle("quiet", !last);
-  heard.textContent = "";
-  const old = hero.querySelector(".char");
-  const mount = () => {
-    hero.innerHTML = charHTML(c);
-    const el = hero.querySelector(".char");
-    el.classList.add("enter");
-    el.addEventListener("animationend", () => el.classList.remove("enter"), { once:true });
-    attachFace(el, c);
-  };
-  if (old && !first){ old.classList.add("exit"); setTimeout(mount, 160); } else mount();
-  setState("idle");
+/* ---------- build the deck ---------- */
+const cards = FRIENDS.map((c, i) => {
+  const el = document.createElement("article");
+  el.className = "card"; el.dataset.id = c.id;
+  el.setAttribute("aria-label", `${c.name}, ${c.species}`);
+  el.style.cssText = `--c1:${c.c1};--c2:${c.c2};--nA:${c.nA};--nB:${c.nB};--accent:${c.accent};--accent2:${c.accent2};--ctaInk:${c.ctaInk};--shade:${c.shade}`;
+  const [en, ch, cu] = c.stats;
+  el.innerHTML = `
+    <div class="title"><h2 class="name">${c.name}</h2><p class="desc">${c.desc}</p></div>
+    <div class="stage"><div class="aura"></div>${charHTML(c)}<div class="think" aria-hidden="true"><i></i><i></i><i></i></div></div>
+    <div class="fabs">
+      <button class="fab f-hi" type="button" aria-label="Hear ${c.name} say hi">${ICON.hi}</button>
+      <button class="fab f-loop" type="button" aria-label="Keep the conversation going" aria-pressed="${keepGoing}">${ICON.loop}</button>
+      <button class="fab f-reset" type="button" aria-label="Start a fresh chat with ${c.name}">${ICON.reset}</button>
+    </div>
+    <div class="panel">
+      <div class="ptop"><h3>${c.species}</h3><p>${c.voiceDesc}</p></div>
+      <div class="stats">
+        <div class="stat"><div class="v">${ICON.bolt}${en}<small>/10</small></div><span>Energy</span></div>
+        <div class="stat"><div class="v">${ICON.chat}${ch}<small>/10</small></div><span>Chatty</span></div>
+        <div class="stat"><div class="v">${ICON.heart}${cu}<small>/10</small></div><span>Cuddly</span></div>
+      </div>
+      <button class="cta" type="button">${ICON.mic}${ICON.stop}<span>Talk to ${c.name}</span></button>
+    </div>`;
+  deck.appendChild(el);
+  const dot = document.createElement("button");
+  dot.type = "button"; dot.setAttribute("aria-label", c.name);
+  dot.onclick = () => goTo(i);
+  pager.appendChild(dot);
+
+  el.querySelector(".cta").onclick = e => { e.stopPropagation(); if (i !== currentIndex) return goTo(i); onTalk(); };
+  el.querySelector(".f-hi").onclick = e => { e.stopPropagation(); if (i !== currentIndex) return goTo(i); sayHi(); };
+  el.querySelector(".f-loop").onclick = e => { e.stopPropagation(); setKeepGoing(!keepGoing); };
+  el.querySelector(".f-reset").onclick = e => { e.stopPropagation(); if (i !== currentIndex) return goTo(i); resetChat(); };
+  el.querySelector(".stage .char").onclick = e => { e.stopPropagation(); boop(); };
+  el.addEventListener("click", () => { if (i !== currentIndex) goTo(i); });
+  return el;
+});
+const cardOf = i => cards[i];
+const activeCard = () => cards[currentIndex];
+
+/* ---------- sizing: fit each character between the name and the panel ---------- */
+function sizeDeck(){
+  const topH = document.querySelector(".top").offsetHeight;
+  const h = Math.max(540, Math.min(760, window.innerHeight - topH - 70));
+  document.documentElement.style.setProperty("--cardH", h + "px");
+  cards.forEach((card, i) => layoutCard(card, FRIENDS[i]));
+}
+function layoutCard(card, c){
+  const W = card.clientWidth;
+  const title = card.querySelector(".title"), panel = card.querySelector(".panel");
+  const titleB = title.offsetTop + title.offsetHeight, panelT = panel.offsetTop;
+  const [top, bot] = EXT[c.kind];
+  const avail = panelT + 16 - (titleB + 8);
+  let k = Math.min(avail / (bot - top), (W * .9) / 160);
+  const used = (bot - top) * k;
+  const bw = 240 * k, bh = 300 * k;
+  const topPx = titleB + 8 + Math.max(0, (avail - used) / 2) - (top + 20) * k;
+  const ch = card.querySelector(".stage .char");
+  ch.style.cssText = `width:${bw}px;height:${bh}px;left:${(W - bw) / 2}px;top:${topPx}px`;
+  const cy = topPx + ((top + bot) / 2 + 20) * k, size = 190 * k;
+  const aura = card.querySelector(".aura");
+  aura.style.cssText = `width:${size}px;height:${size}px;left:${(W - size) / 2}px;top:${cy - size / 2}px`;
+  const think = card.querySelector(".think");
+  think.style.left = `${W / 2 + 58 * k}px`;
+  think.style.top = `${topPx + (top + 26) * k}px`;
+  const fabs = card.querySelector(".fabs");
+  fabs.style.top = `${titleB + (panelT - titleB) / 2 - 76}px`;
+}
+window.addEventListener("resize", () => { clearTimeout(sizeDeck.t); sizeDeck.t = setTimeout(sizeDeck, 120); });
+
+/* ---------- swiping between friends ---------- */
+function nearestIndex(){
+  const mid = deck.scrollLeft + deck.clientWidth / 2;
+  let best = 0, bd = Infinity;
+  cards.forEach((el, i) => { const d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid); if (d < bd){ bd = d; best = i; } });
+  return best;
+}
+let settleT;
+deck.addEventListener("scroll", () => {
+  const n = nearestIndex();
+  cards.forEach((el, i) => el.classList.toggle("active", i === n));
+  clearTimeout(settleT);
+  settleT = setTimeout(() => { const i = nearestIndex(); if (i !== currentIndex) choose(i); }, 110);
+}, { passive:true });
+function goTo(i){
+  const el = cards[i];
+  deck.scrollTo({ left: el.offsetLeft - (deck.clientWidth - el.offsetWidth) / 2, behavior:"smooth" });
 }
 
-/* ================= face life: blinks, glances, ear twitches, lip flap ================= */
+function choose(i, first){
+  stopEverything();
+  cards[currentIndex].querySelector(".stage").classList.remove("hero", "listening", "thinking", "talking");
+  cards[currentIndex].classList.remove("listening", "thinking", "talking");
+  currentIndex = i; current = FRIENDS[i];
+  cards.forEach((el, j) => el.classList.toggle("active", j === i));
+  [...pager.children].forEach((d, j) => d.setAttribute("aria-current", j === i));
+  const stage = cards[i].querySelector(".stage");
+  stage.classList.add("hero");
+  const ch = stage.querySelector(".char");
+  attachFace(ch, current);
+  if (!first){ ch.classList.remove("hop"); void ch.offsetWidth; ch.classList.add("hop"); }
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#F4F1FF");
+  setState("idle");
+}
+function setKeepGoing(on){
+  keepGoing = on;
+  store.set("tinyFriends.keepGoing", on ? "1" : "0");
+  document.querySelectorAll(".f-loop").forEach(b => b.setAttribute("aria-pressed", on));
+  toast(on ? "Conversation mode on. They'll keep listening after they reply." : "Conversation mode off. Tap Talk for each turn.");
+}
+function resetChat(){
+  stopEverything();
+  histories[current.id] = [];
+  toast(`Fresh start with ${current.name}.`);
+}
+function boop(){
+  if (state === "talking"){ if (ctl){ ctl.abort(); ctl = null; } streamDone = true; hush(); session = false; setState("idle"); return; }
+  if (state !== "idle") return;
+  const ch = activeCard().querySelector(".stage .char");
+  ch.classList.remove("hop"); void ch.offsetWidth; ch.classList.add("hop");
+  blink();
+}
+let toastT;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => toastEl.classList.remove("show"), 3800);
+}
+
+/* ================= face life: blinks, glances, ear twitches ================= */
 const face = { timers:[], eyes:[], look:null, mouth:null, pop:null, root:null, flap:null };
 function later(fn, ms){ const t = setTimeout(fn, ms); face.timers.push(t); return t; }
 function attachFace(root, c){
   face.timers.forEach(clearTimeout); face.timers = [];
-  stopFlap();
+  stopFlap(); stopLip();
   face.root = root;
   face.eyes = [...root.querySelectorAll(".eye")];
   face.look = root.querySelector(".look");
@@ -476,6 +629,12 @@ function schedTwitch(){
     schedTwitch();
   }, 3500 + Math.random()*5500);
 }
+function popHead(){
+  if (!face.pop) return;
+  face.pop.classList.add("on");
+  setTimeout(() => face.pop && face.pop.classList.remove("on"), 110);
+}
+/* mouth for the built-in voice: no audio to read, so it flaps */
 function startFlap(){
   if (face.flap || !face.mouth) return;
   const tick = () => {
@@ -485,71 +644,173 @@ function startFlap(){
   };
   tick();
 }
-function stopFlap(){ clearTimeout(face.flap); face.flap = null; if (face.mouth) face.mouth.style.transform = ""; }
-function popHead(){
-  if (!face.pop) return;
-  face.pop.classList.add("on");
-  setTimeout(() => face.pop && face.pop.classList.remove("on"), 110);
+function stopFlap(){ clearTimeout(face.flap); face.flap = null; if (face.mouth && !lip.raf) face.mouth.style.transform = ""; }
+/* mouth for studio voices: follows the actual loudness of the audio */
+const lip = { raf:null, cur:0, last:0, td:null };
+function startLip(){
+  if (lip.raf || !analyser || !face.mouth) return;
+  lip.td = lip.td || new Uint8Array(analyser.fftSize);
+  const loop = () => {
+    analyser.getByteTimeDomainData(lip.td);
+    let s = 0;
+    for (let i = 0; i < lip.td.length; i++){ const v = (lip.td[i] - 128) / 128; s += v*v; }
+    const rms = Math.sqrt(s / lip.td.length);
+    const target = Math.min(1.45, rms * 10);
+    lip.cur += (target - lip.cur) * (target > lip.cur ? .6 : .35);
+    const o = Math.max(.12, lip.cur);
+    if (face.mouth) face.mouth.style.transform = `scale(${(1.08 - o*.12).toFixed(3)},${o.toFixed(3)})`;
+    if (rms > .09 && lip.last < .04) popHead();
+    lip.last = rms;
+    lip.raf = requestAnimationFrame(loop);
+  };
+  loop();
 }
+function stopLip(){ if (lip.raf) cancelAnimationFrame(lip.raf); lip.raf = null; lip.cur = 0; if (face.mouth && !face.flap) face.mouth.style.transform = ""; }
 
 /* ================= state ================= */
-function setState(s){
+function setState(s, msg){
   state = s;
+  const card = activeCard(), stage = card.querySelector(".stage");
   for (const k of ["listening","thinking","talking"]){
-    hero.classList.toggle(k, s === k);
-    screen.classList.toggle(k, s === k);
-    micBtn.classList.toggle(k, s === k);
+    stage.classList.toggle(k, s === k);
+    card.classList.toggle(k, s === k);
   }
-  if (s === "talking") startFlap(); else stopFlap();
+  if (s !== "talking"){ stopFlap(); stopLip(); }
   if (s === "thinking") lookAt(2.2, -1.9);
   if (s === "listening") lookAt(0, -.2);
-  statusEl.textContent =
-    s === "listening" ? "Listening… tap when you're done" :
-    s === "thinking"  ? `${current.name} is thinking… tap to cancel` :
-    s === "talking"   ? "Tap to cut in" : "Tap to talk";
-  micBtn.setAttribute("aria-label", statusEl.textContent);
+  const label =
+    s === "listening" ? "Listening… tap when done" :
+    s === "thinking"  ? "Thinking… tap to cancel" :
+    s === "talking"   ? "Tap to cut in" : `Talk to ${current.name}`;
+  card.querySelector(".cta span").textContent = label;
+  card.querySelector(".cta").setAttribute("aria-label", label);
+  if (msg) toast(msg);
 }
+function flash(msg){ toast(msg); }
 
 /* ================= voices ================= */
+/* Studio voices (OpenAI) when a key is saved, otherwise the phone's own voice. */
+let actx = null, analyser = null;
+function ensureAudio(){
+  try {
+    if (!actx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      actx = new AC();
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.connect(actx.destination);
+    }
+    if (actx.state === "suspended") actx.resume().catch(() => {});
+  } catch(e){ return null; }
+  return actx;
+}
+const out = { gen:0, jobs:[], playing:false, src:null, ctl:null, hdOff:false };
+function useHD(){ return !!store.get(KEY_OA) && !out.hdOff && !!actx; }
+
+async function ttsFetch(text, c, signal){
+  const res = await fetch("https://api.openai.com/v1/audio/speech", {
+    method:"POST", signal,
+    headers:{ "Authorization":"Bearer " + store.get(KEY_OA), "Content-Type":"application/json" },
+    body: JSON.stringify({ model:"gpt-4o-mini-tts", voice:c.oa.voice, input:text, instructions:c.oa.style, response_format:"wav" })
+  });
+  if (!res.ok){
+    let m = ""; try { const j = await res.json(); m = j?.error?.message || ""; } catch(e){}
+    const err = new Error(m); err.status = res.status; throw err;
+  }
+  const ab = await res.arrayBuffer();
+  return await new Promise((ok, bad) => {
+    const p = actx.decodeAudioData(ab, ok, bad);
+    if (p && p.then) p.then(ok, bad);
+  });
+}
+function ttsErrorCopy(e){
+  if (e.status === 401) return "The OpenAI key didn't work, so using the basic voice. Tap the gear to fix it.";
+  if (e.status === 429) return "OpenAI says the account is out of credit or busy. Using the basic voice for now.";
+  return "Studio voice hiccuped, so using the basic voice for this one.";
+}
+
+function say(text, c){
+  const t = cleanForSpeech(text);
+  if (!t) return;
+  if (useHD()){
+    const job = { text:t, p: ttsFetch(t, c, out.ctl.signal) };
+    job.p.catch(() => {});
+    out.jobs.push(job);
+    pump();
+  } else speak(t);
+}
+async function pump(){
+  if (out.playing || !out.jobs.length) return;
+  const gen = out.gen;
+  const job = out.jobs.shift();
+  out.playing = true;
+  let buf;
+  try { buf = await job.p; }
+  catch(e){
+    if (gen !== out.gen) return;
+    out.playing = false;
+    if (e.name === "AbortError") return;
+    if (e.status === 401 || e.status === 403 || e.status === 429) out.hdOff = true;
+    flash(ttsErrorCopy(e));
+    speak(job.text);                       // the reply still gets said
+    pump(); return;
+  }
+  if (gen !== out.gen) return;
+  const src = actx.createBufferSource();
+  src.buffer = buf;
+  src.connect(analyser);
+  out.src = src;
+  src.onended = () => {
+    if (gen !== out.gen) return;
+    out.src = null; out.playing = false; stopLip();
+    if (out.jobs.length) pump(); else afterSpeech();
+  };
+  if (state !== "talking") setState("talking");
+  startLip();
+  src.start();
+}
+
+/* built-in voice fallback */
 let voices = [];
 function loadVoices(){ try { voices = speechSynthesis.getVoices() || []; } catch(e){ voices = []; } }
 if ("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-
 function pickVoice(c){
   const lang = (navigator.language || "en-US").slice(0,2).toLowerCase();
   let pool = voices.filter(v => v.lang && v.lang.toLowerCase().replace("_","-").startsWith(lang));
   if (!pool.length) pool = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
   if (!pool.length) return null;
+  const best = pool.filter(v => /natural|neural|online|enhanced|premium|studio|wavenet/i.test(v.name));
   const nice = pool.filter(v => /samantha|karen|moira|tessa|victoria|fiona|zira|aria|jenny|female|google us english|google uk english female/i.test(v.name));
-  const list = nice.length ? nice : pool;
+  const list = best.length ? best : nice.length ? nice : pool;
   return list[c.v % list.length];
 }
 function cleanForSpeech(t){
   return t.replace(/[*_#`>~]/g, "").replace(/\([^)]*\)/g, "")
           .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
 }
-
 const speaking = new Set();   // keep utterances referenced so Chrome fires their end events
-function speak(text){
-  const t = cleanForSpeech(text);
+function speak(t){
   if (!t || !("speechSynthesis" in window)) return;
+  const c = current;
   const u = new SpeechSynthesisUtterance(t);
-  const v = pickVoice(current);
+  const v = pickVoice(c);
   if (v){ u.voice = v; u.lang = v.lang; }
-  u.pitch = Math.min(2, current.pitch);
-  u.rate = current.rate;
+  u.pitch = c.bpitch;          // gentle lift: big pitch jumps make built-in voices sound crunchy
+  u.rate = c.rate;
   let finished = false, guard = null;
   const done = () => {
     if (finished) return;
     finished = true; clearTimeout(guard); speaking.delete(u);
+    if (!speaking.size) stopFlap();
     afterSpeech();
   };
-  // safety nets in case the browser never reports the start or the end
-  guard = setTimeout(done, 15000 + t.length * 120 / current.rate);
+  guard = setTimeout(done, 15000 + t.length * 120 / c.rate);
   u.onstart = () => {
     clearTimeout(guard);
-    guard = setTimeout(done, 2500 + t.length * 110 / current.rate);
+    guard = setTimeout(done, 2500 + t.length * 110 / c.rate);
     if (state !== "talking") setState("talking");
+    startFlap();
   };
   u.onboundary = () => popHead();
   u.onend = done; u.onerror = done;
@@ -557,19 +818,24 @@ function speak(text){
   speechSynthesis.speak(u);
 }
 function afterSpeech(){
-  if (speaking.size > 0 || !streamDone) return;
+  if (speaking.size > 0 || out.playing || out.jobs.length > 0 || !streamDone) return;
   if (state === "talking" || state === "thinking") setState("idle");
-  if (session && keepGoing.checked) setTimeout(() => { if (state === "idle" && session) startListening(); }, 350);
+  if (session && keepGoing) setTimeout(() => { if (state === "idle" && session) startListening(); }, 350);
   else session = false;
 }
 function hush(){
   speaking.clear();
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+  out.gen++; out.jobs = []; out.playing = false;
+  if (out.ctl){ out.ctl.abort(); out.ctl = null; }
+  if (out.src){ out.src.onended = null; try { out.src.stop(); } catch(e){} out.src = null; }
+  stopFlap(); stopLip();
 }
-let audioUnlocked = false;
+let unlocked = false;
 function unlockAudio(){
-  if (audioUnlocked || !("speechSynthesis" in window)) return;
-  audioUnlocked = true;
+  ensureAudio();
+  if (unlocked || !("speechSynthesis" in window)) return;
+  unlocked = true;
   try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch(e){}
 }
 
@@ -625,11 +891,11 @@ async function askClaude(c, onText, signal){
 function apiErrorCopy(e){
   if (e.name === "TypeError") return "Couldn't reach Claude. Check your internet connection.";
   switch (e.status){
-    case 401: return "That API key didn't work. Tap the gear to fix it.";
-    case 403: return "This API key isn't allowed to do that. Check it in your Anthropic console.";
+    case 401: return "The Anthropic key didn't work. Tap the gear to fix it.";
+    case 403: return "This Anthropic key isn't allowed to do that.";
     case 429: return "Too many requests at once. Give it a few seconds.";
     case 529: return "Claude is busy right now. Try again in a moment.";
-    default:  return `Claude couldn't answer (${e.status || "error"}). ${e.message || ""}`.trim();
+    default:  return `Claude couldn't answer (${e.status || "error"}).`;
   }
 }
 
@@ -637,30 +903,32 @@ async function respond(text){
   if (!store.get(KEY_STORE)){ openKeySheet(); session = false; return; }
   const c = current;
   (histories[c.id] = histories[c.id] || []).push({ role:"user", content:text });
-  heard.textContent = `You: ${text}`;
-  bubble.classList.add("quiet"); bubble.textContent = "…";
-  setState("thinking");
   hush();
+  setState("thinking");
   const my = new AbortController();
   ctl = my;
+  out.ctl = new AbortController();
   streamDone = false;
-  let spoken = 0, partial = "";
+  const hd = useHD();
+  let spoken = 0, partial = "", firstOut = false;
+  // Say the first sentence as soon as it arrives, then the rest in one go
+  // (studio voices sound more natural with fewer, longer pieces).
   const flush = (full, final) => {
+    if (c !== current) return;
     const rest = full.slice(spoken);
     let n = 0;
     if (final) n = rest.length;
-    else { const m = rest.match(/^[\s\S]*?[.!?…]+(\s|$)/); n = m ? m[0].length : 0; }
-    if (n > 0){ spoken += n; if (c === current) speak(rest.slice(0, n)); }
+    else if (!hd || !firstOut){ const m = rest.match(/^[\s\S]*?[.!?…]+(\s|$)/); n = m ? m[0].length : 0; }
+    if (n > 0){
+      const piece = rest.slice(0, n);
+      spoken += n;
+      if (piece.trim()){ firstOut = true; say(piece, c); }
+    }
   };
   try {
-    const reply = await askClaude(c, soFar => {
-      if (c !== current) return;
-      partial = soFar;
-      bubble.classList.remove("quiet"); bubble.textContent = soFar;
-      flush(soFar, false);
-    }, my.signal);
+    const reply = await askClaude(c, soFar => { partial = soFar; flush(soFar, false); }, my.signal);
     histories[c.id].push({ role:"assistant", content: reply });
-    if (c === current){ bubble.classList.remove("quiet"); bubble.textContent = reply; flush(reply, true); }
+    flush(reply, true);
   } catch (e){
     if (e.name === "AbortError"){
       if (partial) histories[c.id].push({ role:"assistant", content: partial });
@@ -670,14 +938,14 @@ async function respond(text){
     histories[c.id].pop();
     session = false;
     if (c === current){
-      bubble.classList.remove("quiet");
-      bubble.textContent = apiErrorCopy(e);
-      if (e.status === 401) openKeySheet(true);
+      hush();
+      setState("idle", apiErrorCopy(e));
+      if (e.status === 401) openKeySheet("anthropic");
     }
   } finally {
     if (ctl === my){
       ctl = null; streamDone = true;
-      if (c === current && state !== "listening") afterSpeech();
+      if (c === current && state !== "listening" && state !== "idle") afterSpeech();
     }
   }
 }
@@ -704,31 +972,28 @@ if (SR){
       if (r.isFinal) fin += r[0].transcript; else interim += r[0].transcript;
     }
     finalText = (fin || interim).trim();
-    if (finalText) heard.textContent = finalText;
   };
   rec.onerror = ev => {
     clearTimeout(startGuard);
     const code = ev.error;
-    if (code === "aborted") return;
-    if (code === "no-speech") return;             // handled in onend
+    if (code === "aborted" || code === "no-speech") return;   // no-speech is handled in onend
     session = false;
     if (code === "not-allowed" || code === "service-not-allowed") showMicHelp(code);
     else if (code === "audio-capture") showMicHelp("no-mic");
-    else if (code === "network") heard.textContent = "Speech recognition needs an internet connection. Check it and tap the mic again.";
-    else heard.textContent = `The microphone stopped (${code}). Tap to try again.`;
+    else setState("idle", code === "network" ? "Speech recognition needs internet. Check it and tap again." : `The microphone stopped (${code}). Tap to try again.`);
   };
   rec.onend = () => {
     clearTimeout(startGuard);
     if (state !== "listening") return;
     const t = finalText; finalText = "";
-    setState("idle");
-    if (t){ quietRetries = 0; respond(t); return; }
-    if (session && keepGoing.checked && quietRetries < 2){
+    if (t){ quietRetries = 0; setState("idle"); respond(t); return; }
+    if (session && keepGoing && quietRetries < 2){
       quietRetries++;
+      setState("idle");
       setTimeout(() => { if (state === "idle" && session) startListening(); }, 250);
     } else {
       session = false; quietRetries = 0;
-      heard.textContent = "Didn't hear anything. Tap the mic when you're ready.";
+      setState("idle", "Didn't hear anything. Tap when you're ready.");
     }
   };
 }
@@ -736,7 +1001,7 @@ if (SR){
 function startListening(){
   if (!rec || state === "listening") return;
   hush();
-  finalText = ""; heard.textContent = ""; recStarted = false;
+  finalText = ""; recStarted = false;
   try { rec.start(); }
   catch(e){ try { rec.abort(); } catch(_){} setTimeout(() => { try { rec.start(); } catch(_){ } }, 200); }
   setState("listening");
@@ -755,7 +1020,7 @@ function stopEverything(){
   if (state !== "idle") setState("idle");
 }
 
-micBtn.onclick = async () => {
+async function onTalk(){
   unlockAudio();
   if (!preflight()) return;
   if (!store.get(KEY_STORE)){ openKeySheet(); return; }
@@ -769,15 +1034,22 @@ micBtn.onclick = async () => {
       if (!finalText) session = false;
       break;
     case "thinking":
-      stopEverything(); bubble.textContent = "Okay, never mind!"; break;
+      stopEverything(); break;
     case "talking":
-      hush(); streamDone = true;
       if (ctl){ ctl.abort(); ctl = null; }
+      streamDone = true; hush();
       setState("idle"); session = true; startListening(); break;
   }
-};
-
-screen.onclick = () => { if (state === "talking"){ hush(); if (ctl){ ctl.abort(); ctl = null; } streamDone = true; session = false; setState("idle"); } };
+}
+function sayHi(){
+  unlockAudio();
+  stopEverything();
+  out.ctl = new AbortController();
+  streamDone = true;
+  const c = current;
+  if (useHD()) say(c.greeting, c);
+  else speak(cleanForSpeech(c.greeting));
+}
 
 /* ================= setup + help sheets ================= */
 function preflight(){
@@ -841,30 +1113,38 @@ function showMicHelp(kind){
 $("micClose").onclick = () => micSheet.hidden = true;
 $("micReload").onclick = () => location.reload();
 
-const keySheet = $("keySheet"), keyIn = $("keyIn"), keyErr = $("keyErr");
+const keySheet = $("keySheet"), keyIn = $("keyIn"), oaIn = $("oaIn"), keyErr = $("keyErr");
 function openKeySheet(bad){
-  const has = !!store.get(KEY_STORE);
-  keyIn.value = "";
-  keyErr.textContent = bad ? "That key was rejected. Paste a working one." : "";
-  $("keyForget").hidden = !has;
-  $("keyClose").hidden = !has;
+  const hasA = !!store.get(KEY_STORE), hasO = !!store.get(KEY_OA);
+  keyIn.value = ""; oaIn.value = "";
+  keyIn.placeholder = hasA ? "Saved. Paste a new one to replace it." : "sk-ant-…";
+  oaIn.placeholder  = hasO ? "Saved. Paste a new one to replace it." : "sk-…";
+  keyErr.textContent = bad === "anthropic" ? "That Anthropic key was rejected. Paste a working one." : "";
+  $("keyForget").hidden = !(hasA || hasO);
+  $("keyClose").hidden = !hasA;
   keySheet.hidden = false;
-  setTimeout(() => keyIn.focus(), 50);
 }
 $("keySave").onclick = () => {
-  const k = keyIn.value.trim();
-  if (!/^sk-ant-/.test(k)){ keyErr.textContent = "That doesn't look like an Anthropic key. It starts with sk-ant-."; return; }
-  store.set(KEY_STORE, k);
+  const a = keyIn.value.trim(), o = oaIn.value.trim();
+  if (a && !/^sk-ant-/.test(a)){ keyErr.textContent = "The Anthropic key should start with sk-ant-."; return; }
+  if (!a && !store.get(KEY_STORE)){ keyErr.textContent = "Paste your Anthropic key first. Your friends need it to think."; return; }
+  if (o && !/^sk-/.test(o)){ keyErr.textContent = "The OpenAI key should start with sk-."; return; }
+  if (o && /^sk-ant-/.test(o)){ keyErr.textContent = "That's an Anthropic key. The OpenAI one comes from platform.openai.com."; return; }
+  if (a) store.set(KEY_STORE, a);
+  if (o){ store.set(KEY_OA, o); out.hdOff = false; }
   keySheet.hidden = true;
-  bubble.textContent = `All set! Tap the mic and say hi to ${current.name}.`;
+  ensureAudio();
+  toast(store.get(KEY_OA) ? `All set! Tap Talk to ${current.name} to start.` : "All set! Using the basic voice for now.");
 };
-keyIn.addEventListener("keydown", e => { if (e.key === "Enter") $("keySave").click(); });
-$("keyForget").onclick = () => { store.del(KEY_STORE); openKeySheet(); };
+$("keyForget").onclick = () => { store.del(KEY_STORE); store.del(KEY_OA); openKeySheet(); };
 $("keyClose").onclick = () => keySheet.hidden = true;
 $("gear").onclick = () => openKeySheet();
 
-choose(FRIENDS[0], true);
+sizeDeck();
+choose(0, true);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeDeck);
 if (!store.get(KEY_STORE)) openKeySheet();
+else if (!store.get(KEY_OA) && !store.get("tinyFriends.voiceAsked")){ store.set("tinyFriends.voiceAsked", "1"); openKeySheet(); }
 </script>
 </body>
 </html>
