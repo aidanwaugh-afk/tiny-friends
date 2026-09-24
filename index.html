@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDE8FF">
+<title>Tiny Friends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDE8FF; --ink:#33244F; --soft:#716293; --card:#FFFFFF; --line:#D9D0F5; --accent:#7B61FF;
+  --mic:#33244F; --micInk:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1E1731; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; --mic:#F4EEFF; --micInk:#1E1731;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1E1731; --ink:#F4EEFF; --soft:#B3A6D4; --card:#2B2245; --line:#3E3363; --mic:#F4EEFF; --micInk:#1E1731;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Baloo 2", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size:18px; line-height:1.4; -webkit-tap-highlight-color:transparent;
+}
+.defs{position:absolute; width:0; height:0; overflow:hidden}
+.wrap{max-width:500px; margin:0 auto; padding:18px 16px 28px; display:flex; flex-direction:column; gap:12px}
+header{display:flex; align-items:center; justify-content:space-between}
+h1{font-size:30px; font-weight:800; margin:0; letter-spacing:-.01em}
+.gear{width:44px; height:44px; border-radius:50%; border:0; background:var(--card); color:var(--ink); display:grid; place-items:center; cursor:pointer}
+.gear svg{width:22px; height:22px}
+.gear:focus-visible,.pick:focus-visible .ring,.mic:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+
+/* picker */
+.picker{display:flex; gap:10px; overflow-x:auto; padding:8px; margin:0 -8px; scrollbar-width:none}
+.picker::-webkit-scrollbar{display:none}
+.pick{flex:0 0 auto; width:78px; border:0; background:none; color:var(--ink); font:inherit;
+  display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:0}
+.pick:focus-visible{outline:none}
+.ring{position:relative; width:68px; height:68px; border-radius:50%; background:#000; overflow:hidden;
+  transition:box-shadow .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
+.ring .char{position:absolute; width:140%; left:-20%; top:-22%; aspect-ratio:240/300}
+.pick span{font-size:15px; font-weight:600}
+.pick[aria-pressed="true"] .ring{box-shadow:0 0 0 3px var(--bg), 0 0 0 6px var(--ink); transform:scale(1.05)}
+
+/* screen */
+.screen{
+  --glow:rgba(246,160,190,.42);
+  position:relative; width:100%; max-width:360px; margin:4px auto 0; aspect-ratio:1/0.98;
+  border-radius:46px; overflow:hidden; isolation:isolate;
+  background:radial-gradient(90% 58% at 50% 100%, var(--glow), transparent 72%), #000;
+  box-shadow:0 0 0 7px #1c1921, 0 0 0 9px #57525f, 0 26px 50px -22px rgba(40,20,70,.6);
+  transition:background .5s;
+}
+.screen::before{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:3;
+  background:linear-gradient(165deg, rgba(255,255,255,.11) 0%, rgba(255,255,255,0) 32%)}
+.screen::after{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:3; opacity:0;
+  box-shadow:inset 0 0 0 2.5px rgba(255,255,255,.85), inset 0 0 46px var(--glow); transition:opacity .3s}
+.screen.listening::after{animation:listen 1.5s ease-in-out infinite}
+.dots{position:absolute; top:13%; right:13%; display:flex; gap:5px; z-index:4; opacity:0; transform:scale(.6); transition:opacity .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
+.dots i{width:8px; height:8px; border-radius:50%; background:#fff; animation:dot 1s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.15s} .dots i:nth-child(3){animation-delay:.3s}
+.screen.thinking .dots{opacity:.9; transform:scale(1)}
+
+.hero{position:absolute; left:0; width:100%; top:6%; aspect-ratio:240/300; z-index:1}
+.char{position:relative}
+.hero .char{position:absolute; inset:0}
+.char .L,.char .rig,.char .face{position:absolute; inset:0; width:100%; height:100%}
+.char img.L{display:block; user-select:none; -webkit-user-drag:none; pointer-events:none}
+.face{overflow:visible}
+.eye,.mouth{transform-box:fill-box; transform-origin:center}
+.eye{transition:transform .07s ease-in}
+.look{transition:transform .22s cubic-bezier(.3,.7,.3,1)}
+.mouth{opacity:0; transition:transform .08s ease-out, opacity .1s}
+.smile{transition:opacity .1s}
+
+/* hero-only motion */
+.hero .breathe{transform-origin:50% 100%; animation:breathe 4.2s ease-in-out infinite}
+.hero .sway{animation:sway 7s ease-in-out infinite}
+.hero .pose{transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
+.hero .pop{transition:transform .12s ease-out}
+.hero .pop.on{transform:translateY(-1.1%) scale(1.012)}
+.hero.listening .pose{transform:rotate(-4deg) translateY(-1%) scale(1.025)}
+.hero.thinking .pose{transform:rotate(3.5deg) translateY(.4%)}
+.hero .earL,.hero .earR{transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.hero.listening .k-bunny .earL{transform:rotate(-9deg)}
+.hero.listening .k-bunny .earR{transform:rotate(9deg)}
+.hero.listening .k-panda .earL,.hero.listening .k-panda .earR{transform:scale(1.1)}
+.hero .earL.twitch{animation:twitchL .55s ease-in-out}
+.hero .earR.twitch{animation:twitchR .55s ease-in-out}
+.hero .tuft{animation:tuft 3.2s ease-in-out infinite}
+.hero .leaf{animation:tuft 3.8s ease-in-out infinite}
+.hero .wingL,.hero .wingR,.hero .armL,.hero .armR{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.hero.talking .wingL{animation:flapL .32s ease-in-out infinite alternate}
+.hero.talking .wingR{animation:flapR .32s ease-in-out infinite alternate}
+.hero.listening .wingL{transform:rotate(-10deg)} .hero.listening .wingR{transform:rotate(10deg)}
+.hero.talking .armL{animation:flapL .5s ease-in-out infinite alternate}
+.hero.talking .armR{animation:flapR .5s ease-in-out infinite alternate}
+.hero .k-ghost .breathe{animation:float 3.6s ease-in-out infinite}
+.hero .aura{animation:aura 3.6s ease-in-out infinite}
+.hero.talking .mouth{opacity:1}
+.hero.talking .smile{opacity:0}
+.hero .char.enter{animation:enter .6s cubic-bezier(.34,1.56,.64,1) both}
+.hero .char.exit{animation:exit .17s ease-in both}
+
+.nameplate{text-align:center; margin-top:6px}
+.who{font-size:24px; font-weight:800; margin:0}
+.tag{margin:-4px 0 0; font-size:15px; color:var(--soft)}
+.bubble{position:relative; background:var(--card); color:var(--ink); border-radius:22px; padding:14px 16px; min-height:56px; font-size:18px}
+.bubble::before{content:""; position:absolute; top:-9px; left:50%; margin-left:-10px; border:10px solid transparent; border-top:0; border-bottom-color:var(--card)}
+.bubble.quiet{color:var(--soft)}
+.heard{min-height:24px; color:var(--soft); font-size:16px; text-align:center; margin:0}
+
+.controls{display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:4px}
+.mic{position:relative; width:92px; height:92px; border-radius:50%; border:0; cursor:pointer; background:var(--mic); color:var(--micInk);
+  display:grid; place-items:center; transition:transform .2s cubic-bezier(.34,1.56,.64,1); touch-action:manipulation}
+.mic:active{transform:scale(.93)}
+.mic svg{width:38px; height:38px; grid-area:1/1}
+.mic .i-stop{display:none}
+.mic.thinking .i-mic{display:none} .mic.thinking .i-stop{display:block}
+.mic::after{content:""; position:absolute; inset:-9px; border-radius:50%; border:3px solid var(--ink); opacity:0; pointer-events:none}
+.mic.listening::after{animation:halo 1.4s ease-out infinite}
+.status{font-size:16px; color:var(--soft); margin:0; text-align:center; min-height:22px}
+.toggle{display:flex; align-items:center; gap:8px; font-size:16px; color:var(--soft); cursor:pointer}
+.toggle input{width:20px; height:20px; accent-color:var(--ink)}
+
+/* sheets */
+.sheet-wrap{position:fixed; inset:0; z-index:20; background:rgba(20,12,40,.55); display:flex; align-items:flex-end; justify-content:center;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet{width:100%; max-width:480px; background:var(--card); color:var(--ink); border-radius:28px; padding:22px 20px 20px; animation:sheet .35s cubic-bezier(.2,.9,.3,1.1)}
+.sheet h2{font-size:22px; margin:0 0 6px; line-height:1.2}
+.sheet p{margin:0 0 12px; color:var(--soft); font-size:16px}
+.sheet ol{margin:0 0 14px; padding-left:22px; font-size:16px} .sheet li{margin-bottom:6px}
+.sheet a{color:var(--accent)}
+.sheet input{width:100%; font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:2px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:10px}
+.sheet input:focus-visible{outline:none; border-color:var(--ink)}
+.btns{display:flex; gap:8px; flex-wrap:wrap}
+.btn{font:inherit; font-weight:600; font-size:17px; border:0; border-radius:999px; padding:10px 20px; cursor:pointer; background:var(--ink); color:var(--bg)}
+.btn.ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 2px var(--line)}
+.err{color:#D2466A; font-size:15px; margin:0 0 10px; min-height:0}
+
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.008,1.02)}}
+@keyframes sway{0%,100%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5%)}}
+@keyframes aura{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes tuft{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes twitchL{0%,100%{transform:rotate(0)}30%{transform:rotate(-11deg)}60%{transform:rotate(4deg)}}
+@keyframes twitchR{0%,100%{transform:rotate(0)}30%{transform:rotate(11deg)}60%{transform:rotate(-4deg)}}
+@keyframes flapL{from{transform:rotate(0)}to{transform:rotate(-16deg)}}
+@keyframes flapR{from{transform:rotate(0)}to{transform:rotate(16deg)}}
+@keyframes enter{from{transform:translateY(14%) scale(.72); opacity:0}to{transform:none; opacity:1}}
+@keyframes exit{to{transform:translateY(8%) scale(.86); opacity:0}}
+@keyframes listen{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes dot{0%,100%{transform:translateY(0); opacity:.5}50%{transform:translateY(-5px); opacity:1}}
+@keyframes halo{0%{opacity:.55; transform:scale(.92)}100%{opacity:0; transform:scale(1.28)}}
+@keyframes sheet{from{transform:translateY(24px); opacity:0}to{transform:none; opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  .hero .breathe,.hero .sway,.hero .tuft,.hero .leaf,.hero .aura,.hero .k-ghost .breathe,
+  .hero.talking .wingL,.hero.talking .wingR,.hero.talking .armL,.hero.talking .armR,.dots i{animation:none}
+  .screen.listening::after{animation:none; opacity:.8}
+  .mic.listening::after{animation:none; opacity:.5}
+  .hero .char.enter,.hero .char.exit{animation-duration:.01s}
+}
+</style>
+</head>
+<body>
+<svg class="defs" aria-hidden="true" focusable="false"><defs>
+  <radialGradient id="bead" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#5d5a67"/><stop offset=".5" stop-color="#17151d"/><stop offset="1" stop-color="#040306"/></radialGradient>
+  <linearGradient id="beak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC286"/><stop offset=".6" stop-color="#FF9A45"/><stop offset="1" stop-color="#E0742A"/></linearGradient>
+  <linearGradient id="gape" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1424"/><stop offset="1" stop-color="#6B2A40"/></linearGradient>
+</defs></svg>
+
+<main class="wrap">
+  <header>
+    <h1>Tiny Friends</h1>
+    <button class="gear" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+
+  <div class="picker" id="picker" role="group" aria-label="Choose a friend"></div>
+
+  <div class="screen" id="screen">
+    <div class="hero" id="hero"></div>
+    <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  </div>
+  <div class="nameplate"><p class="who" id="who"></p><p class="tag" id="tag"></p></div>
+  <div class="bubble quiet" id="bubble" aria-live="polite"></div>
+  <p class="heard" id="heard"></p>
+
+  <div class="controls">
+    <button class="mic" id="mic" aria-label="Tap to talk">
+      <svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <svg class="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="currentColor"/></svg>
+    </button>
+    <p class="status" id="status">Tap to talk</p>
+    <label class="toggle"><input type="checkbox" id="keepGoing" checked> Keep the conversation going</label>
+  </div>
+</main>
+
+<!-- one-time API key setup -->
+<div class="sheet-wrap" id="keySheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="keyTitle">
+    <h2 id="keyTitle">One-time setup</h2>
+    <p>Paste your Anthropic API key so your friends can think. It stays in this browser and only goes to Anthropic. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+    <input id="keyIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Anthropic API key">
+    <p class="err" id="keyErr"></p>
+    <div class="btns">
+      <button class="btn" id="keySave">Save key</button>
+      <button class="btn ghost" id="keyForget" hidden>Remove key</button>
+      <button class="btn ghost" id="keyClose" hidden>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- microphone help -->
+<div class="sheet-wrap" id="micSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="micTitle">
+    <h2 id="micTitle">Turn on the microphone</h2>
+    <p id="micWhy"></p>
+    <ol id="micSteps"></ol>
+    <div class="btns">
+      <button class="btn" id="micReload">Reload page</button>
+      <button class="btn ghost" id="micClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-haiku-4-5-20251001";
+const KEY_STORE = "tinyFriends.apiKey";
+
+const FRIENDS = [
+  { id:"mochi", name:"Mochi", tag:"a giggly little bunny", kind:"bunny", glow:"rgba(246,160,190,.44)", pitch:1.9, rate:1.05, v:0,
+    pal:{ fur:["#FFEEF2","#F5C9D5","#D597AA"], ear:["#FFD6E0","#F4A2B8","#DA7894"], muzzle:["#FFFFFF","#FFF3F6","#F0D4DD"], bow:["#FFC7D7","#FF7FA3","#D5507A"] },
+    persona:"Mochi, a tiny pink bunny with a bow. Sweet, giggly, loves snacks, naps and soft things. You sometimes say 'hehe'." },
+  { id:"pip", name:"Pip", tag:"a very excited baby chick", kind:"chick", glow:"rgba(255,214,90,.42)", pitch:2.0, rate:1.2, v:1,
+    pal:{ fur:["#FFF8D8","#FFE07A","#E7B03C"], belly:["#FFFEF4","#FFF3C4","#F4DA86"], wing:["#FFEAA3","#F5C850","#D69A28"] },
+    persona:"Pip, a fluffy baby chick who gets SO excited about everything and talks fast. Everything is the best thing ever." },
+  { id:"bao", name:"Bao", tag:"a sleepy panda", kind:"panda", glow:"rgba(170,215,160,.40)", pitch:1.25, rate:0.88, v:2,
+    pal:{ fur:["#FFFFFF","#F6F2EB","#D3CABD"], black:["#5E5664","#2E2834","#15121A"] },
+    persona:"Bao, a sleepy, cozy panda. Calm, gentle, a bit dreamy. Loves bamboo, blankets and slow afternoons. You yawn now and then." },
+  { id:"fizz", name:"Fizz", tag:"a cheeky little ghost", kind:"ghost", glow:"rgba(160,170,255,.44)", pitch:1.6, rate:1.12, v:3,
+    pal:{ fur:["#FFFFFF","#DDE1FF","#A4ABE4"] },
+    persona:"Fizz, a small friendly ghost. Playful and a bit cheeky, likes gentle spooky puns, but is never actually scary." },
+  { id:"clover", name:"Clover", tag:"a cheerful frog", kind:"frog", glow:"rgba(140,215,120,.42)", pitch:1.45, rate:1.0, v:4,
+    pal:{ fur:["#DDF7D0","#9EDB8C","#5A9F4C"], belly:["#FFFFF2","#EEF8D4","#C8DEA0"], leaf:["#C9F2A8","#66C24F","#3B8A30"] },
+    persona:"Clover, a cheerful little frog with a tiny clover leaf on her head. Loves rain, puddles and cheering people on. A true hype-frog." }
+];
+
+/* ================= character art =================
+   Fur parts are rendered once into SVG images (fur texture, soft shading),
+   then stacked and moved with cheap CSS transforms. Faces stay live SVG. */
+const BOX = "-20 -20 240 300";
+const FUR = `<filter id="fur" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+  <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="5" result="lump"/>
+  <feDisplacementMap in="SourceGraphic" in2="lump" scale="4" xChannelSelector="R" yChannelSelector="G" result="lumpy"/>
+  <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="2" seed="3" result="hair"/>
+  <feDisplacementMap in="lumpy" in2="hair" scale="7" xChannelSelector="R" yChannelSelector="G" result="fuzz"/>
+  <feGaussianBlur in="fuzz" stdDeviation="0.45" result="shape"/>
+  <feTurbulence type="fractalNoise" baseFrequency="1.9 0.6" numOctaves="3" seed="9" result="n0"/>
+  <feGaussianBlur in="n0" stdDeviation="0.25" result="n2"/>
+  <feColorMatrix in="n2" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0 0 0 -0.47" result="d"/>
+  <feComposite in="d" in2="shape" operator="in" result="dIn"/>
+  <feColorMatrix in="n2" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 1.1 0 0 -0.55" result="l"/>
+  <feComposite in="l" in2="shape" operator="in" result="lIn"/>
+  <feMerge><feMergeNode in="shape"/><feMergeNode in="dIn"/><feMergeNode in="lIn"/></feMerge>
+</filter>
+<filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.4"/></filter>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>`;
+
+function grad(id, [a,b,c]){
+  return `<radialGradient id="${id}" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient>`;
+}
+function layer(c, fur, extra=""){
+  const defs = FUR + Object.entries(c.pal).map(([k,v]) => grad("g-" + k, v)).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${BOX}" width="480" height="600"><defs>${defs}</defs>${fur ? `<g filter="url(#fur)">${fur}</g>` : ""}${extra}</svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+const F = k => `url(#g-${k})`;
+const sheen = (x,y,rx,ry,op=.3) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="${op}" filter="url(#soft)"/>`;
+const blushSVG = (y,dx,color) => `<g filter="url(#soft)" opacity=".8"><ellipse cx="${100-dx}" cy="${y}" rx="11" ry="7" fill="${color}"/><ellipse cx="${100+dx}" cy="${y}" rx="11" ry="7" fill="${color}"/></g>`;
+const shadow = (x,y,rx,ry,op=.3,rot=0) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#000" opacity="${op}" filter="url(#soft)"${rot ? ` transform="rotate(${rot} ${x} ${y})"` : ""}/>`;
+
+function bead(x,y,r){
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#bead)"/>
+    <circle cx="${x - r*.34}" cy="${y - r*.38}" r="${r*.32}" fill="#fff"/>
+    <circle cx="${x + r*.36}" cy="${y + r*.32}" r="${r*.13}" fill="#fff" opacity=".75"/>
+    <path d="M${x - r*.62} ${y + r*.45} Q${x} ${y + r*.95} ${x + r*.62} ${y + r*.45}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="${r*.18}" stroke-linecap="round"/>`;
+}
+const eyePair = (a, b, r, ring) => `<g class="look">
+  <g class="eye">${ring ? `<circle cx="${a[0]}" cy="${a[1]}" r="${r+1.8}" fill="#EDE8F2"/>` : ""}${bead(a[0],a[1],r)}</g>
+  <g class="eye">${ring ? `<circle cx="${b[0]}" cy="${b[1]}" r="${r+1.8}" fill="#EDE8F2"/>` : ""}${bead(b[0],b[1],r)}</g></g>`;
+const smileSVG = (y,w,color) => `<path class="smile" d="M${100-w} ${y} Q100 ${y + w*.9} ${100+w} ${y}" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round"/>`;
+const mouthSVG = (y,rx,fill) => `<g class="mouth"><ellipse cx="100" cy="${y}" rx="${rx}" ry="4.6" fill="${fill || "url(#gape)"}"/><ellipse cx="100" cy="${y+2.4}" rx="${rx*.55}" ry="1.7" fill="#FF8FA6"/></g>`;
+
+function rig(c){
+  const L = (fur, extra) => layer(c, fur, extra);
+  switch(c.kind){
+    case "bunny": return {
+      back:[{ cls:"body", src:L(`<ellipse cx="100" cy="222" rx="76" ry="66" fill="${F("fur")}"/>${shadow(100,176,58,16)}`) }],
+      head:{ origin:[100,178], layers:[
+        { cls:"earL", origin:[82,92], src:L(`<ellipse cx="72" cy="50" rx="17" ry="44" fill="${F("fur")}" transform="rotate(-14 72 50)"/><ellipse cx="72" cy="56" rx="8" ry="30" fill="${F("ear")}" transform="rotate(-14 72 56)"/>`) },
+        { cls:"earR", origin:[118,92], src:L(`<ellipse cx="128" cy="50" rx="17" ry="44" fill="${F("fur")}" transform="rotate(14 128 50)"/><ellipse cx="128" cy="56" rx="8" ry="30" fill="${F("ear")}" transform="rotate(14 128 56)"/>`) },
+        { cls:"head", src:L(`<ellipse cx="100" cy="124" rx="64" ry="58" fill="${F("fur")}"/><ellipse cx="100" cy="142" rx="24" ry="16" fill="${F("muzzle")}"/>`,
+            blushSVG(140,38,"#FF8AA6") + sheen(82,92,22,11)) },
+        { cls:"bow", src:L("", `<g transform="translate(134 80) rotate(16)">${shadow(0,3,17,8,.25)}
+            <path d="M0 0 C-7 -10 -19 -9 -17 1 C-16 10 -5 7 0 0Z" fill="${F("bow")}"/><path d="M0 0 C7 -10 19 -9 17 1 C16 10 5 7 0 0Z" fill="${F("bow")}"/>
+            <circle r="3.8" fill="#E2638A"/><path d="M-13 -3 q4 -3.6 8 -.6" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" fill="none" stroke-linecap="round"/></g>`) }
+      ], face:`${eyePair([80,121],[120,121],6)}
+        <path d="M95.5 133 Q100 129.5 104.5 133 Q100 138.5 95.5 133Z" fill="#E27C98"/>
+        ${smileSVG(142,5,"#3A2530")}${mouthSVG(146,5)}` },
+      front:[] };
+    case "chick": return {
+      back:[],
+      head:{ origin:[100,206], layers:[
+        { cls:"tuft", origin:[104,68], src:L(`<ellipse cx="93" cy="57" rx="4.5" ry="13" fill="${F("fur")}" transform="rotate(-26 93 57)"/><ellipse cx="101" cy="51" rx="5" ry="15" fill="${F("fur")}" transform="rotate(-6 101 51)"/><ellipse cx="109" cy="52" rx="4.5" ry="14" fill="${F("fur")}" transform="rotate(12 109 52)"/><ellipse cx="116" cy="59" rx="4" ry="11" fill="${F("fur")}" transform="rotate(30 116 59)"/>`) },
+        { cls:"head", src:L(`<ellipse cx="100" cy="138" rx="76" ry="74" fill="${F("fur")}"/><ellipse cx="100" cy="180" rx="42" ry="30" fill="${F("belly")}"/>`,
+            blushSVG(136,40,"#FF9A6E") + sheen(78,92,24,12)) }
+      ], face:`${eyePair([80,118],[120,118],6.5)}
+        ${mouthSVG(138,5,"#9C3E16")}
+        <path d="M89 130 Q100 119 111 130 Q100 136.5 89 130Z" fill="url(#beak)"/>
+        <path d="M95 126 Q100 123 104 125" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/>` },
+      front:[
+        { cls:"wingL", origin:[46,140], src:L(`${shadow(38,170,14,30,.22,24)}<ellipse cx="31" cy="166" rx="15" ry="31" fill="${F("wing")}" transform="rotate(24 31 166)"/>`) },
+        { cls:"wingR", origin:[154,140], src:L(`${shadow(162,170,14,30,.22,-24)}<ellipse cx="169" cy="166" rx="15" ry="31" fill="${F("wing")}" transform="rotate(-24 169 166)"/>`) }
+      ] };
+    case "panda": return {
+      back:[{ cls:"body", src:L(`<ellipse cx="100" cy="226" rx="82" ry="60" fill="${F("black")}"/><ellipse cx="100" cy="236" rx="44" ry="50" fill="${F("fur")}"/>${shadow(100,180,60,16)}`) }],
+      head:{ origin:[100,182], layers:[
+        { cls:"earL", origin:[60,86], src:L(`<circle cx="50" cy="70" r="21" fill="${F("black")}"/>`) },
+        { cls:"earR", origin:[140,86], src:L(`<circle cx="150" cy="70" r="21" fill="${F("black")}"/>`) },
+        { cls:"head", src:L(`<ellipse cx="100" cy="126" rx="68" ry="60" fill="${F("fur")}"/><ellipse cx="76" cy="124" rx="15" ry="20" fill="${F("black")}" transform="rotate(30 76 124)"/><ellipse cx="124" cy="124" rx="15" ry="20" fill="${F("black")}" transform="rotate(-30 124 124)"/>`,
+            blushSVG(149,46,"#FF95AE") + sheen(84,90,22,10,.35)) }
+      ], face:`${eyePair([78,122],[122,122],5,true)}
+        <ellipse cx="100" cy="143" rx="7" ry="4.6" fill="url(#bead)"/><ellipse cx="98" cy="141.6" rx="2.4" ry="1.2" fill="#fff" opacity=".6"/>
+        ${smileSVG(151,5,"#2E2834")}${mouthSVG(155,5)}` },
+      front:[] };
+    case "ghost": return {
+      back:[{ cls:"aura", src:L("", `<ellipse cx="100" cy="116" rx="76" ry="74" fill="#AEB8FF" opacity=".5" filter="url(#glow)"/>`) }],
+      head:{ origin:[100,176], layers:[
+        { cls:"head", src:L(`<path d="M36 122 Q36 42 100 42 Q164 42 164 122 L164 172 Q153.3 188 142.7 172 Q132 188 121.3 172 Q110.7 188 100 172 Q89.3 188 78.7 172 Q68 188 57.3 172 Q46.7 188 36 172 Z" fill="${F("fur")}"/>`,
+            blushSVG(122,35,"#FF9EC4") + sheen(80,70,24,12,.4)) },
+        { cls:"armL", origin:[46,124], src:L(`<ellipse cx="34" cy="132" rx="9" ry="15" fill="${F("fur")}" transform="rotate(42 34 132)"/>`) },
+        { cls:"armR", origin:[154,124], src:L(`<ellipse cx="166" cy="132" rx="9" ry="15" fill="${F("fur")}" transform="rotate(-42 166 132)"/>`) }
+      ], face:`${eyePair([82,106],[118,106],6)}${smileSVG(123,5,"#353061")}${mouthSVG(127,5)}` },
+      front:[] };
+    case "frog": return {
+      back:[{ cls:"body", src:L(`<ellipse cx="100" cy="216" rx="74" ry="52" fill="${F("fur")}"/><ellipse cx="100" cy="226" rx="46" ry="38" fill="${F("belly")}"/>${shadow(100,190,64,14)}`) }],
+      head:{ origin:[100,192], layers:[
+        { cls:"head", src:L(`<circle cx="66" cy="78" r="27" fill="${F("fur")}"/><circle cx="134" cy="78" r="27" fill="${F("fur")}"/><ellipse cx="100" cy="136" rx="80" ry="58" fill="${F("fur")}"/>`,
+            blushSVG(144,50,"#FF8C9E") + sheen(82,104,26,11,.25)) },
+        { cls:"leaf", origin:[100,90], src:L("", `${shadow(100,86,10,4,.25)}<path d="M100 90 Q99 82 100 76" stroke="#3F8A33" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+            <g fill="${F("leaf")}"><path d="M100 76 C92 70 90 60 96 58 C99 57 100 60 100 62 C100 60 101 57 104 58 C110 60 108 70 100 76Z"/>
+            <path d="M100 76 C92 80 82 79 81 73 C81 70 84 69 86 70 C84 69 82 66 85 64 C89 61 97 67 100 76Z"/>
+            <path d="M100 76 C108 80 118 79 119 73 C119 70 116 69 114 70 C116 69 118 66 115 64 C111 61 103 67 100 76Z"/></g>
+            <path d="M97 62 q2 -2 4 0" stroke="#fff" stroke-opacity=".5" stroke-width="1.2" fill="none" stroke-linecap="round"/>`) }
+      ], face:`${eyePair([66,76],[134,76],8.5)}
+        <path class="smile" d="M84 146 Q100 159 116 146" fill="none" stroke="#2C5526" stroke-width="2.5" stroke-linecap="round"/>
+        ${mouthSVG(151,7)}` },
+      front:[] };
+  }
+}
+
+const pct = ([x,y]) => `${((x+20)/240*100).toFixed(2)}% ${((y+20)/300*100).toFixed(2)}%`;
+const img = l => `<img class="L ${l.cls}" alt="" draggable="false" src="${l.src}"${l.origin ? ` style="transform-origin:${pct(l.origin)}"` : ""}>`;
+const RIGS = {};
+function charHTML(c){
+  const r = RIGS[c.id] || (RIGS[c.id] = rig(c));
+  const o = pct(r.head.origin);
+  return `<div class="char k-${c.kind}">
+    <div class="rig breathe">
+      ${r.back.map(img).join("")}
+      <div class="rig sway" style="transform-origin:${o}"><div class="rig pose" style="transform-origin:${o}"><div class="rig pop" style="transform-origin:${o}">
+        ${r.head.layers.map(img).join("")}
+        <svg class="face" viewBox="${BOX}" aria-hidden="true">${r.head.face}</svg>
+      </div></div></div>
+      ${r.front.map(img).join("")}
+    </div>
+  </div>`;
+}
+
+/* ================= page ================= */
+const $ = id => document.getElementById(id);
+const picker=$("picker"), screen=$("screen"), hero=$("hero"), who=$("who"), tag=$("tag"),
+      bubble=$("bubble"), heard=$("heard"), micBtn=$("mic"), statusEl=$("status"), keepGoing=$("keepGoing");
+
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+keepGoing.checked = store.get("tinyFriends.keepGoing") !== "0";
+keepGoing.onchange = () => store.set("tinyFriends.keepGoing", keepGoing.checked ? "1" : "0");
+
+let current = FRIENDS[0];
+const histories = {};
+let state = "idle";          // idle | listening | thinking | talking
+let session = false;         // true while a back-and-forth conversation is running
+let ctl = null, streamDone = true, quietRetries = 0;
+
+FRIENDS.forEach(c => {
+  const b = document.createElement("button");
+  b.className = "pick"; b.type = "button"; b.dataset.id = c.id;
+  b.innerHTML = `<div class="ring">${charHTML(c)}</div><span>${c.name}</span>`;
+  b.onclick = () => choose(c);
+  picker.appendChild(b);
+});
+
+function choose(c, first){
+  stopEverything();
+  current = c;
+  document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === c.id));
+  who.textContent = c.name;
+  tag.textContent = c.tag;
+  screen.style.setProperty("--glow", c.glow);
+  const h = histories[c.id];
+  const last = h && [...h].reverse().find(t => t.role === "assistant");
+  bubble.textContent = last ? last.content : `Hi, I'm ${c.name}! Tap the mic and talk to me.`;
+  bubble.classList.toggle("quiet", !last);
+  heard.textContent = "";
+  const old = hero.querySelector(".char");
+  const mount = () => {
+    hero.innerHTML = charHTML(c);
+    const el = hero.querySelector(".char");
+    el.classList.add("enter");
+    el.addEventListener("animationend", () => el.classList.remove("enter"), { once:true });
+    attachFace(el, c);
+  };
+  if (old && !first){ old.classList.add("exit"); setTimeout(mount, 160); } else mount();
+  setState("idle");
+}
+
+/* ================= face life: blinks, glances, ear twitches, lip flap ================= */
+const face = { timers:[], eyes:[], look:null, mouth:null, pop:null, root:null, flap:null };
+function later(fn, ms){ const t = setTimeout(fn, ms); face.timers.push(t); return t; }
+function attachFace(root, c){
+  face.timers.forEach(clearTimeout); face.timers = [];
+  stopFlap();
+  face.root = root;
+  face.eyes = [...root.querySelectorAll(".eye")];
+  face.look = root.querySelector(".look");
+  face.mouth = root.querySelector(".mouth");
+  face.pop = root.querySelector(".pop");
+  schedBlink(); schedGlance();
+  if (c.kind === "bunny" || c.kind === "panda") schedTwitch();
+}
+function blink(){
+  face.eyes.forEach(e => e.style.transform = "scaleY(.08)");
+  later(() => face.eyes.forEach(e => e.style.transform = ""), 95);
+}
+function schedBlink(){ later(() => { blink(); if (Math.random() < .18) later(blink, 240); schedBlink(); }, 2200 + Math.random()*3600); }
+function lookAt(x, y){ if (face.look) face.look.style.transform = `translate(${x}px,${y}px)`; }
+function glanceTarget(){
+  if (state === "thinking") return [2.2, -1.9];
+  if (state === "listening") return [(Math.random()-.5)*.8, -.2];
+  if (state === "talking") return [(Math.random()-.5)*1.6, (Math.random()-.5)*.8];
+  return [(Math.random()-.5)*4.4, (Math.random()-.5)*2.6];
+}
+function schedGlance(){ later(() => { lookAt(...glanceTarget()); schedGlance(); }, 1200 + Math.random()*2600); }
+function schedTwitch(){
+  later(() => {
+    if (state !== "listening"){
+      const ears = face.root.querySelectorAll(".earL,.earR");
+      const e = ears[Math.random() < .5 ? 0 : 1];
+      if (e){ e.classList.remove("twitch"); void e.offsetWidth; e.classList.add("twitch"); later(() => e.classList.remove("twitch"), 600); }
+    }
+    schedTwitch();
+  }, 3500 + Math.random()*5500);
+}
+function startFlap(){
+  if (face.flap || !face.mouth) return;
+  const tick = () => {
+    const open = .25 + Math.random()*1.1;
+    face.mouth.style.transform = `scale(${(1.08 - open*.12).toFixed(2)},${open.toFixed(2)})`;
+    face.flap = setTimeout(tick, 70 + Math.random()*70);
+  };
+  tick();
+}
+function stopFlap(){ clearTimeout(face.flap); face.flap = null; if (face.mouth) face.mouth.style.transform = ""; }
+function popHead(){
+  if (!face.pop) return;
+  face.pop.classList.add("on");
+  setTimeout(() => face.pop && face.pop.classList.remove("on"), 110);
+}
+
+/* ================= state ================= */
+function setState(s){
+  state = s;
+  for (const k of ["listening","thinking","talking"]){
+    hero.classList.toggle(k, s === k);
+    screen.classList.toggle(k, s === k);
+    micBtn.classList.toggle(k, s === k);
+  }
+  if (s === "talking") startFlap(); else stopFlap();
+  if (s === "thinking") lookAt(2.2, -1.9);
+  if (s === "listening") lookAt(0, -.2);
+  statusEl.textContent =
+    s === "listening" ? "Listening… tap when you're done" :
+    s === "thinking"  ? `${current.name} is thinking… tap to cancel` :
+    s === "talking"   ? "Tap to cut in" : "Tap to talk";
+  micBtn.setAttribute("aria-label", statusEl.textContent);
+}
+
+/* ================= voices ================= */
+let voices = [];
+function loadVoices(){ try { voices = speechSynthesis.getVoices() || []; } catch(e){ voices = []; } }
+if ("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+function pickVoice(c){
+  const lang = (navigator.language || "en-US").slice(0,2).toLowerCase();
+  let pool = voices.filter(v => v.lang && v.lang.toLowerCase().replace("_","-").startsWith(lang));
+  if (!pool.length) pool = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+  if (!pool.length) return null;
+  const nice = pool.filter(v => /samantha|karen|moira|tessa|victoria|fiona|zira|aria|jenny|female|google us english|google uk english female/i.test(v.name));
+  const list = nice.length ? nice : pool;
+  return list[c.v % list.length];
+}
+function cleanForSpeech(t){
+  return t.replace(/[*_#`>~]/g, "").replace(/\([^)]*\)/g, "")
+          .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+}
+
+const speaking = new Set();   // keep utterances referenced so Chrome fires their end events
+function speak(text){
+  const t = cleanForSpeech(text);
+  if (!t || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(t);
+  const v = pickVoice(current);
+  if (v){ u.voice = v; u.lang = v.lang; }
+  u.pitch = Math.min(2, current.pitch);
+  u.rate = current.rate;
+  let finished = false, guard = null;
+  const done = () => {
+    if (finished) return;
+    finished = true; clearTimeout(guard); speaking.delete(u);
+    afterSpeech();
+  };
+  // safety nets in case the browser never reports the start or the end
+  guard = setTimeout(done, 15000 + t.length * 120 / current.rate);
+  u.onstart = () => {
+    clearTimeout(guard);
+    guard = setTimeout(done, 2500 + t.length * 110 / current.rate);
+    if (state !== "talking") setState("talking");
+  };
+  u.onboundary = () => popHead();
+  u.onend = done; u.onerror = done;
+  speaking.add(u);
+  speechSynthesis.speak(u);
+}
+function afterSpeech(){
+  if (speaking.size > 0 || !streamDone) return;
+  if (state === "talking" || state === "thinking") setState("idle");
+  if (session && keepGoing.checked) setTimeout(() => { if (state === "idle" && session) startListening(); }, 350);
+  else session = false;
+}
+function hush(){
+  speaking.clear();
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+let audioUnlocked = false;
+function unlockAudio(){
+  if (audioUnlocked || !("speechSynthesis" in window)) return;
+  audioUnlocked = true;
+  try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch(e){}
+}
+
+/* ================= Claude ================= */
+function systemFor(c){
+  return `You are ${c.persona}
+You're talking out loud with someone through a voice chat, so:
+- Keep each reply short: one to three sentences.
+- Plain spoken words only. No emoji, no lists, no markdown, no actions in asterisks or brackets.
+- Stay in character, be warm and fun, and sometimes ask a little question back.
+- Reply in the same language the person speaks.
+- Keep everything friendly and suitable for all ages.`;
+}
+
+async function askClaude(c, onText, signal){
+  let msgs = histories[c.id].slice(-16);
+  while (msgs.length && msgs[0].role !== "user") msgs = msgs.slice(1);
+  const res = await fetch(API_URL, {
+    method:"POST", signal,
+    headers:{
+      "content-type":"application/json",
+      "x-api-key": store.get(KEY_STORE) || "",
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body: JSON.stringify({ model: MODEL, max_tokens: 300, stream: true, system: systemFor(c), messages: msgs })
+  });
+  if (!res.ok){
+    let msg = "";
+    try { const j = await res.json(); msg = j?.error?.message || ""; } catch(e){}
+    const err = new Error(msg); err.status = res.status; throw err;
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "", text = "";
+  for (;;){
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream:true }).replace(/\r\n/g, "\n");
+    let i;
+    while ((i = buf.indexOf("\n\n")) !== -1){
+      const block = buf.slice(0, i); buf = buf.slice(i + 2);
+      const data = block.split("\n").filter(l => l.startsWith("data:")).map(l => l.slice(5).trim()).join("");
+      if (!data) continue;
+      let ev; try { ev = JSON.parse(data); } catch(e){ continue; }
+      if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta"){ text += ev.delta.text; onText(text); }
+      else if (ev.type === "error"){ const err = new Error(ev.error?.message || ""); err.status = ev.error?.type === "overloaded_error" ? 529 : 500; throw err; }
+    }
+  }
+  return text;
+}
+
+function apiErrorCopy(e){
+  if (e.name === "TypeError") return "Couldn't reach Claude. Check your internet connection.";
+  switch (e.status){
+    case 401: return "That API key didn't work. Tap the gear to fix it.";
+    case 403: return "This API key isn't allowed to do that. Check it in your Anthropic console.";
+    case 429: return "Too many requests at once. Give it a few seconds.";
+    case 529: return "Claude is busy right now. Try again in a moment.";
+    default:  return `Claude couldn't answer (${e.status || "error"}). ${e.message || ""}`.trim();
+  }
+}
+
+async function respond(text){
+  if (!store.get(KEY_STORE)){ openKeySheet(); session = false; return; }
+  const c = current;
+  (histories[c.id] = histories[c.id] || []).push({ role:"user", content:text });
+  heard.textContent = `You: ${text}`;
+  bubble.classList.add("quiet"); bubble.textContent = "…";
+  setState("thinking");
+  hush();
+  const my = new AbortController();
+  ctl = my;
+  streamDone = false;
+  let spoken = 0, partial = "";
+  const flush = (full, final) => {
+    const rest = full.slice(spoken);
+    let n = 0;
+    if (final) n = rest.length;
+    else { const m = rest.match(/^[\s\S]*?[.!?…]+(\s|$)/); n = m ? m[0].length : 0; }
+    if (n > 0){ spoken += n; if (c === current) speak(rest.slice(0, n)); }
+  };
+  try {
+    const reply = await askClaude(c, soFar => {
+      if (c !== current) return;
+      partial = soFar;
+      bubble.classList.remove("quiet"); bubble.textContent = soFar;
+      flush(soFar, false);
+    }, my.signal);
+    histories[c.id].push({ role:"assistant", content: reply });
+    if (c === current){ bubble.classList.remove("quiet"); bubble.textContent = reply; flush(reply, true); }
+  } catch (e){
+    if (e.name === "AbortError"){
+      if (partial) histories[c.id].push({ role:"assistant", content: partial });
+      else histories[c.id].pop();
+      return;
+    }
+    histories[c.id].pop();
+    session = false;
+    if (c === current){
+      bubble.classList.remove("quiet");
+      bubble.textContent = apiErrorCopy(e);
+      if (e.status === 401) openKeySheet(true);
+    }
+  } finally {
+    if (ctl === my){
+      ctl = null; streamDone = true;
+      if (c === current && state !== "listening") afterSpeech();
+    }
+  }
+}
+
+/* ================= listening ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua);
+let rec = null, finalText = "", startGuard = null, recStarted = false;
+
+if (SR){
+  rec = new SR();
+  rec.lang = navigator.language || "en-US";
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+  rec.onstart = () => { recStarted = true; clearTimeout(startGuard); };
+  rec.onaudiostart = () => clearTimeout(startGuard);
+  rec.onresult = ev => {
+    let interim = "", fin = "";
+    for (let i = 0; i < ev.results.length; i++){
+      const r = ev.results[i];
+      if (r.isFinal) fin += r[0].transcript; else interim += r[0].transcript;
+    }
+    finalText = (fin || interim).trim();
+    if (finalText) heard.textContent = finalText;
+  };
+  rec.onerror = ev => {
+    clearTimeout(startGuard);
+    const code = ev.error;
+    if (code === "aborted") return;
+    if (code === "no-speech") return;             // handled in onend
+    session = false;
+    if (code === "not-allowed" || code === "service-not-allowed") showMicHelp(code);
+    else if (code === "audio-capture") showMicHelp("no-mic");
+    else if (code === "network") heard.textContent = "Speech recognition needs an internet connection. Check it and tap the mic again.";
+    else heard.textContent = `The microphone stopped (${code}). Tap to try again.`;
+  };
+  rec.onend = () => {
+    clearTimeout(startGuard);
+    if (state !== "listening") return;
+    const t = finalText; finalText = "";
+    setState("idle");
+    if (t){ quietRetries = 0; respond(t); return; }
+    if (session && keepGoing.checked && quietRetries < 2){
+      quietRetries++;
+      setTimeout(() => { if (state === "idle" && session) startListening(); }, 250);
+    } else {
+      session = false; quietRetries = 0;
+      heard.textContent = "Didn't hear anything. Tap the mic when you're ready.";
+    }
+  };
+}
+
+function startListening(){
+  if (!rec || state === "listening") return;
+  hush();
+  finalText = ""; heard.textContent = ""; recStarted = false;
+  try { rec.start(); }
+  catch(e){ try { rec.abort(); } catch(_){} setTimeout(() => { try { rec.start(); } catch(_){ } }, 200); }
+  setState("listening");
+  clearTimeout(startGuard);
+  startGuard = setTimeout(() => {
+    if (state === "listening" && !recStarted){ try { rec.abort(); } catch(e){} setState("idle"); session = false; showMicHelp("timeout"); }
+  }, 6000);
+}
+
+function stopEverything(){
+  session = false;
+  if (ctl){ ctl.abort(); ctl = null; }
+  streamDone = true;
+  hush();
+  if (rec && state === "listening"){ finalText = ""; try { rec.abort(); } catch(e){} }
+  if (state !== "idle") setState("idle");
+}
+
+micBtn.onclick = async () => {
+  unlockAudio();
+  if (!preflight()) return;
+  if (!store.get(KEY_STORE)){ openKeySheet(); return; }
+  switch (state){
+    case "idle":
+      if (!(await micPermissionOK())) return;
+      session = true; quietRetries = 0;
+      startListening(); break;
+    case "listening":
+      try { rec.stop(); } catch(e){}
+      if (!finalText) session = false;
+      break;
+    case "thinking":
+      stopEverything(); bubble.textContent = "Okay, never mind!"; break;
+    case "talking":
+      hush(); streamDone = true;
+      if (ctl){ ctl.abort(); ctl = null; }
+      setState("idle"); session = true; startListening(); break;
+  }
+};
+
+screen.onclick = () => { if (state === "talking"){ hush(); if (ctl){ ctl.abort(); ctl = null; } streamDone = true; session = false; setState("idle"); } };
+
+/* ================= setup + help sheets ================= */
+function preflight(){
+  if (!window.isSecureContext){ showMicHelp("insecure"); return false; }
+  if (!SR){ showMicHelp("unsupported"); return false; }
+  return true;
+}
+async function micPermissionOK(){
+  try {
+    if (navigator.permissions?.query){
+      const p = await navigator.permissions.query({ name:"microphone" });
+      if (p.state === "denied"){ showMicHelp("not-allowed"); return false; }
+    }
+  } catch(e){}
+  return true;
+}
+
+const micSheet = $("micSheet"), micWhy = $("micWhy"), micSteps = $("micSteps");
+function showMicHelp(kind){
+  let why = "", steps = [];
+  if (kind === "insecure"){
+    why = "Browsers only allow the microphone on secure https:// pages, and this one was opened another way.";
+    steps = ["Put this file on an https:// web address (GitHub Pages works, and it's free).", "Open that address in Chrome."];
+  } else if (kind === "unsupported"){
+    why = "This browser can't turn speech into text.";
+    steps = isIOS ? ["Open this page in Safari instead. On iPhone, Safari has the speech support Chrome is missing."]
+                  : ["Open this page in Chrome."];
+  } else if (kind === "no-mic"){
+    why = "No microphone was found, or another app is using it.";
+    steps = ["Close other apps that might be using the mic (calls, voice recorders).", "Tap the mic here again."];
+  } else if (kind === "timeout"){
+    why = "The microphone never started.";
+    steps = ["Close other apps that might be using the mic.", "Reload this page and tap the mic again."];
+  } else if (isAndroid){
+    why = "Chrome isn't allowed to use your microphone yet.";
+    steps = [
+      "In Chrome, tap the icon to the left of the web address, then Permissions, then turn Microphone on.",
+      "If it's already on: open your phone's Settings, then Apps, then Chrome, then Permissions, then Microphone, and pick Allow.",
+      "Come back and reload the page."
+    ];
+  } else if (isIOS){
+    why = kind === "service-not-allowed" ? "Speech recognition is switched off on this iPhone." : "Your browser isn't allowed to use the microphone yet.";
+    steps = [
+      "Open Settings, find Chrome (or Safari), and turn Microphone on.",
+      "In Settings, go to General, then Keyboard, and turn on Enable Dictation. iPhone browsers need it for speech.",
+      "Come back and reload the page."
+    ];
+  } else {
+    why = "Chrome isn't allowed to use your microphone yet.";
+    steps = [
+      "Click the icon to the left of the web address and set Microphone to Allow.",
+      "If it's blocked system-wide: on a Mac, go to System Settings, then Privacy & Security, then Microphone, and turn on Chrome. On Windows, go to Settings, then Privacy & security, then Microphone.",
+      "Reload the page."
+    ];
+  }
+  micWhy.textContent = why;
+  micSteps.innerHTML = "";
+  steps.forEach(s => { const li = document.createElement("li"); li.textContent = s; micSteps.appendChild(li); });
+  micSheet.hidden = false;
+}
+$("micClose").onclick = () => micSheet.hidden = true;
+$("micReload").onclick = () => location.reload();
+
+const keySheet = $("keySheet"), keyIn = $("keyIn"), keyErr = $("keyErr");
+function openKeySheet(bad){
+  const has = !!store.get(KEY_STORE);
+  keyIn.value = "";
+  keyErr.textContent = bad ? "That key was rejected. Paste a working one." : "";
+  $("keyForget").hidden = !has;
+  $("keyClose").hidden = !has;
+  keySheet.hidden = false;
+  setTimeout(() => keyIn.focus(), 50);
+}
+$("keySave").onclick = () => {
+  const k = keyIn.value.trim();
+  if (!/^sk-ant-/.test(k)){ keyErr.textContent = "That doesn't look like an Anthropic key. It starts with sk-ant-."; return; }
+  store.set(KEY_STORE, k);
+  keySheet.hidden = true;
+  bubble.textContent = `All set! Tap the mic and say hi to ${current.name}.`;
+};
+keyIn.addEventListener("keydown", e => { if (e.key === "Enter") $("keySave").click(); });
+$("keyForget").onclick = () => { store.del(KEY_STORE); openKeySheet(); };
+$("keyClose").onclick = () => keySheet.hidden = true;
+$("gear").onclick = () => openKeySheet();
+
+choose(FRIENDS[0], true);
+if (!store.get(KEY_STORE)) openKeySheet();
+</script>
+</body>
+</html>
