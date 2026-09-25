@@ -348,7 +348,8 @@ body.bedtime{--bg:#0D0B1E; background:#0D0B1E}
 .brand{white-space:nowrap}
 @media (max-width:370px){ .brand{font-size:19px} .grown{padding:0 11px; font-size:13.5px} }
 /* grown-up assistant */
-#assist{position:fixed; inset:0; z-index:12; display:flex; flex-direction:column; color:#ECEAF6;
+#assist{--o1:#E8FBFF; --o2:#8FD8FF; --o3:#6C8CFF; --o4:#6A3FE0; --o5:#231A5C; --og:rgba(110,120,255,.35);
+  position:fixed; inset:0; z-index:12; display:flex; flex-direction:column; color:#ECEAF6;
   font-family:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
   background:radial-gradient(120% 70% at 50% 0%, #2B2850 0%, #15142A 55%, #0E0D1A 100%);
   padding:calc(env(safe-area-inset-top,0px) + 10px) 18px calc(env(safe-area-inset-bottom,0px) + 18px)}
@@ -356,25 +357,66 @@ body.bedtime{--bg:#0D0B1E; background:#0D0B1E}
 body.assist-on{overflow:hidden}
 .a-top{display:flex; align-items:center; justify-content:space-between; max-width:560px; width:100%; margin:0 auto}
 .a-title{margin:0; font-size:19px; font-weight:700; letter-spacing:.01em; display:flex; align-items:center; gap:9px}
-.a-title i{width:8px; height:8px; border-radius:50%; background:#7CF3C8; box-shadow:0 0 10px #7CF3C8}
+.a-title i{width:8px; height:8px; border-radius:50%; background:var(--o2); box-shadow:0 0 10px var(--o2)}
 .a-btn{height:40px; min-width:40px; border-radius:99px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#ECEAF6;
   padding:0 14px; font:inherit; font-weight:600; font-size:15px; cursor:pointer; display:inline-grid; place-items:center}
 .a-btn svg{width:19px; height:19px}
 .a-btn:focus-visible{outline:3px solid #7CF3C8; outline-offset:3px}
 .a-mid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px}
-.orb{--lv:1; position:relative; isolation:isolate; width:min(62vw, 250px); aspect-ratio:1; border-radius:50%; border:0; padding:0; cursor:pointer;
-  background:radial-gradient(circle at 34% 28%, #E8FBFF 0%, #8FD8FF 18%, #6C8CFF 42%, #6A3FE0 66%, #231A5C 88%);
-  box-shadow:0 0 70px 6px rgba(110,120,255,.35), inset -18px -24px 60px rgba(20,10,60,.55), inset 12px 14px 40px rgba(255,255,255,.35);
-  transform:scale(var(--lv)); transition:transform .1s linear}
-.orb::before{content:""; position:absolute; inset:-14%; border-radius:50%; z-index:-1; opacity:.55; filter:blur(14px);
-  background:conic-gradient(from 0deg, rgba(124,243,200,0), rgba(124,243,200,.4), rgba(143,216,255,0), rgba(180,140,255,.4), rgba(124,243,200,0));
-  animation:spin 12s linear infinite}
-.orb::after{content:""; position:absolute; inset:-10px; border-radius:50%; border:2px solid rgba(255,255,255,.6); opacity:0}
-#assist.listening .orb::after{animation:halo 1.5s ease-out infinite}
-#assist.thinking .orb::before{animation-duration:1.4s; opacity:.95}
-#assist:not(.listening):not(.talking):not(.thinking) .orb{animation:orbIdle 5s ease-in-out infinite}
-.orb:focus-visible{outline:3px solid #7CF3C8; outline-offset:10px}
-@keyframes orbIdle{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.orb{--lv:1; --m:0; position:relative; isolation:isolate; width:min(68vw, 280px); aspect-ratio:240/300; border:0; padding:0; background:none; cursor:pointer; border-radius:40px}
+.orb::before{content:""; position:absolute; left:6%; right:6%; top:14%; bottom:8%; border-radius:50%; z-index:-1; opacity:.45; filter:blur(34px);
+  background:conic-gradient(from 0deg, var(--o2), var(--o3), var(--o4), var(--o2)); animation:spin 14s linear infinite; transition:opacity .4s}
+#assist.listening .orb::before{opacity:.8}
+#assist.thinking .orb::before{animation-duration:2.5s; opacity:.7}
+.orb:focus-visible{outline:3px solid var(--o2); outline-offset:6px}
+.bot{display:block; width:100%; height:100%; overflow:visible}
+.bot *{transform-box:view-box}
+.b-float{animation:hover 4.2s ease-in-out infinite}
+.b-floor{transform-origin:120px 290px; animation:floor 4.2s ease-in-out infinite}
+.b-head{transform-origin:120px 136px; transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
+.b-nod{transform-origin:120px 136px; transition:transform .12s ease-out}
+.b-nod.on{transform:translateY(2.5px) rotate(.6deg)}
+#assist.listening .b-head{transform:rotate(-7deg) translateY(-2px)}
+#assist.thinking .b-head{transform:rotate(5deg)}
+.b-armL{transform-origin:49px 166px; animation:swayL 5s ease-in-out infinite}
+.b-armR{transform-origin:191px 166px; animation:swayR 5s ease-in-out infinite}
+#assist.wave .b-armR{animation:wave 1.7s ease-in-out}
+#assist.talking .b-armL{animation:talkL 1.3s ease-in-out infinite}
+.b-core{transform-box:fill-box; transform-origin:center; transform:scale(var(--lv)); transition:transform .1s linear}
+.b-ring{transform-box:fill-box; transform-origin:center; animation:spin 10s linear infinite}
+#assist.thinking .b-ring{animation-duration:1.1s}
+.b-tip{transition:opacity .2s}
+#assist.thinking .b-tip{animation:blinkTip .5s ease-in-out infinite alternate}
+#assist.listening .b-ear{opacity:1} .b-ear{opacity:.55; transition:opacity .3s}
+.b-look{transition:transform .25s cubic-bezier(.3,.7,.3,1)}
+.b-blink{transform-box:fill-box; transform-origin:center; transition:transform .08s ease-in}
+.ev,.b-brow,.b-smile,.b-mouthbar{transition:opacity .15s}
+.ev{opacity:0} .ev-open{opacity:1} .b-brow{opacity:0}
+#assist[class*="rm-"] .ev-open{opacity:0}
+#assist.rm-happy .ev-happy,#assist.rm-laugh .ev-happy{opacity:1}
+#assist.rm-excited .ev-wide{opacity:1}
+#assist.rm-surprised .ev-wide{opacity:1}
+#assist.rm-love .ev-heart{opacity:1}
+#assist.rm-sleepy .ev-flat{opacity:1}
+#assist.rm-sad .ev-small,#assist.rm-sad .b-brow{opacity:1}
+#assist.rm-wink .b-eye.l .ev-open{opacity:1}
+#assist.rm-wink .b-eye.r .ev-happy{opacity:1}
+#assist.rm-excited .b-blink{transform:scale(1.08)}
+.b-mouthbar{opacity:0; transform-box:fill-box; transform-origin:center; transform:scale(calc(1 - var(--m) * .2), calc(.6 + var(--m) * 1.7))}
+#assist.talking .b-mouthbar{opacity:1}
+#assist.talking .b-smile{opacity:0}
+#assist.rm-surprised:not(.talking) .b-smile,#assist.rm-sad:not(.talking) .b-smile{opacity:0}
+.b-oh{opacity:0; transition:opacity .15s} #assist.rm-surprised:not(.talking) .b-oh{opacity:1}
+.b-frown{opacity:0} #assist.rm-sad:not(.talking) .b-frown{opacity:1}
+.bot.hop{animation:botHop .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes floor{0%,100%{transform:scale(1); opacity:1}50%{transform:scale(.86); opacity:.7}}
+@keyframes swayL{0%,100%{transform:rotate(2deg)}50%{transform:rotate(-3deg)}}
+@keyframes swayR{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
+@keyframes talkL{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-10deg)}}
+@keyframes wave{0%{transform:rotate(0)}22%{transform:rotate(-150deg)}40%{transform:rotate(-122deg)}58%{transform:rotate(-150deg)}76%{transform:rotate(-122deg)}100%{transform:rotate(0)}}
+@keyframes blinkTip{from{opacity:.35}to{opacity:1}}
+@keyframes botHop{0%{transform:translateY(0)}35%{transform:translateY(-5%) scale(1.02,.98)}70%{transform:translateY(0) scale(.99,1.01)}100%{transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .a-status{font-size:20px; font-weight:600; margin:0; min-height:28px}
 .a-sub{font-size:14.5px; color:rgba(236,234,246,.55); margin:-18px 0 0}
@@ -393,9 +435,18 @@ body.assist-on{overflow:hidden}
 .pinPad button{height:72px; border-radius:50%; border:0; background:var(--bg); color:var(--ink); font-size:26px; font-weight:700; cursor:pointer}
 .pinPad button:active{transform:scale(.93)}
 .pinPad button[data-k=""]{visibility:hidden}
+/* personality picker */
+.pgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:4px 0 6px}
+.pcard{position:relative; text-align:left; border:0; border-radius:16px; padding:10px 12px 10px 38px; cursor:pointer; background:var(--bg); color:var(--ink); box-shadow:inset 0 0 0 1.5px var(--line)}
+.pcard b{display:block; font-size:16px; line-height:1.2}
+.pcard small{display:block; font-size:13px; color:var(--soft); line-height:1.25; margin-top:2px}
+.pcard i{position:absolute; left:11px; top:12px; width:18px; height:18px; border-radius:50%}
+.pcard[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px var(--ink)}
+.sheet textarea{width:100%; font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:2px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:10px; resize:vertical}
+.sheet textarea:focus-visible{outline:none; border-color:var(--ink)}
 @media (prefers-reduced-motion: reduce){
   .hero .breathe,.hero .sway,.hero .tuft,.hero .leaf,.hero .aura-g,.hero .k-ghost .breathe,
-  .hero .char.speaking .wingL,.hero .char.speaking .wingR,.hero .char.speaking .armL,.hero .char.speaking .armR,.wx i,.sky i,.bedtime .moon,.think i,.char.hop,.pt,.orb,.orb::before,#assist .orb::after{animation:none}
+  .hero .char.speaking .wingL,.hero .char.speaking .wingR,.hero .char.speaking .armL,.hero .char.speaking .armR,.wx i,.sky i,.bedtime .moon,.think i,.char.hop,.pt,.orb::before,.b-float,.b-floor,.b-armL,.b-armR,.b-ring,.b-tip,.bot.hop{animation:none}
   .card.listening .aura{animation:none; transform:scale(1.08)}
   .card.listening .cta::after{animation:none; opacity:.6}
   .card{transition:none}
@@ -437,13 +488,76 @@ body.assist-on{overflow:hidden}
 <!-- grown-up assistant -->
 <section id="assist" hidden aria-label="Grown-up assistant">
   <div class="a-top">
-    <h2 class="a-title"><i></i>Assistant</h2>
+    <h2 class="a-title"><i></i><span id="aName">Assistant</span></h2>
     <div style="display:flex; gap:8px"><button class="a-btn" id="aGear" aria-label="Assistant settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="a-btn" id="aDone">Done</button></div>
   </div>
   <div class="a-mid">
-    <button class="orb" id="orb" type="button" aria-label="Tap to talk"></button>
+    <button class="orb" id="orb" type="button" aria-label="Tap to talk">
+    <svg class="bot" viewBox="0 0 240 300" aria-hidden="true">
+      <defs>
+        <linearGradient id="bHead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4E4F5E"/><stop offset=".36" stop-color="#1D1E27"/><stop offset="1" stop-color="#08080C"/></linearGradient>
+        <radialGradient id="bBody" cx="36%" cy="24%" r="85%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".42" stop-color="#EDEFF5"/><stop offset=".78" stop-color="#C3C7D5"/><stop offset="1" stop-color="#8D92A6"/></radialGradient>
+        <linearGradient id="bArm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5A5C6C"/><stop offset=".5" stop-color="#24252E"/><stop offset="1" stop-color="#0B0B10"/></linearGradient>
+        <radialGradient id="bCore" cx="36%" cy="30%" r="75%"><stop offset="0" style="stop-color:var(--o1)"/><stop offset=".35" style="stop-color:var(--o2)"/><stop offset=".72" style="stop-color:var(--o3)"/><stop offset="1" style="stop-color:var(--o4)"/></radialGradient>
+        <radialGradient id="bFloorG"><stop offset="0" style="stop-color:var(--o3)" stop-opacity=".6"/><stop offset="1" style="stop-color:var(--o3)" stop-opacity="0"/></radialGradient>
+        <linearGradient id="bRim" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" style="stop-color:var(--o2)" stop-opacity="0"/><stop offset="1" style="stop-color:var(--o2)" stop-opacity=".55"/></linearGradient>
+        <filter id="bGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="bSoft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <ellipse class="b-floor" cx="120" cy="290" rx="72" ry="9" fill="url(#bFloorG)"/>
+      <g class="b-float">
+        <g class="b-armL"><rect x="35" y="160" width="28" height="74" rx="14" fill="url(#bArm)"/><rect x="40" y="166" width="6" height="42" rx="3" fill="#fff" opacity=".13"/></g>
+        <g class="b-armR"><rect x="177" y="160" width="28" height="74" rx="14" fill="url(#bArm)"/><rect x="182" y="166" width="6" height="42" rx="3" fill="#fff" opacity=".13"/></g>
+        <path d="M120 136 C157 136 179 157 179 192 C179 238 155 274 120 274 C85 274 61 238 61 192 C61 157 83 136 120 136 Z" fill="url(#bBody)"/>
+        <path d="M120 136 C157 136 179 157 179 192 C179 238 155 274 120 274 C85 274 61 238 61 192 C61 157 83 136 120 136 Z" fill="url(#bRim)"/>
+        <ellipse cx="97" cy="164" rx="20" ry="10" fill="#fff" opacity=".75" filter="url(#bSoft)"/>
+        <circle cx="120" cy="200" r="22" fill="#15161C"/>
+        <circle cx="120" cy="200" r="22" fill="none" stroke="#fff" stroke-opacity=".25"/>
+        <circle class="b-core" cx="120" cy="200" r="15" fill="url(#bCore)" filter="url(#bGlow)"/>
+        <circle class="b-ring" cx="120" cy="200" r="19" fill="none" style="stroke:var(--led)" stroke-width="1.6" stroke-dasharray="5 6" opacity=".75"/>
+        <rect x="106" y="122" width="28" height="22" rx="8" fill="#15161C"/>
+        <g class="b-head"><g class="b-nod">
+          <path d="M120 32 L120 14" stroke="#2C2D37" stroke-width="4.5" stroke-linecap="round"/>
+          <circle class="b-tip" cx="120" cy="11" r="6" style="fill:var(--led)" filter="url(#bGlow)"/>
+          <circle cx="41" cy="82" r="15" fill="url(#bArm)"/><circle class="b-ear" cx="41" cy="82" r="7.5" fill="none" style="stroke:var(--led)" stroke-width="2.4" filter="url(#bGlow)"/>
+          <circle cx="199" cy="82" r="15" fill="url(#bArm)"/><circle class="b-ear" cx="199" cy="82" r="7.5" fill="none" style="stroke:var(--led)" stroke-width="2.4" filter="url(#bGlow)"/>
+          <rect x="44" y="30" width="152" height="106" rx="50" fill="url(#bHead)"/>
+          <rect x="44.6" y="30.6" width="150.8" height="104.8" rx="49.4" fill="none" stroke="#fff" stroke-opacity=".14"/>
+          <ellipse cx="104" cy="44" rx="42" ry="8" fill="#fff" opacity=".2" filter="url(#bSoft)"/>
+          <rect x="60" y="46" width="120" height="76" rx="35" fill="#040406"/>
+          <rect x="60.5" y="46.5" width="119" height="75" rx="34.5" fill="none" stroke="#fff" stroke-opacity=".06"/>
+          <g filter="url(#bGlow)" style="fill:var(--led); stroke:var(--led)">
+            <g class="b-look">
+              <g transform="translate(97 80)"><g class="b-eye l"><g class="b-blink">
+            <rect class="ev ev-open" x="-7.5" y="-12" width="15" height="24" rx="7.5"/>
+            <rect class="ev ev-small" x="-7" y="-6" width="14" height="15" rx="7"/>
+            <path class="ev ev-happy" d="M-12 5 A12 12 0 0 1 12 5" fill="none" stroke-width="5.5" stroke-linecap="round"/>
+            <circle class="ev ev-wide" r="11.5"/>
+            <path class="ev ev-flat" d="M-11 3 L11 3" fill="none" stroke-width="5" stroke-linecap="round"/>
+            <path class="ev ev-heart" d="M0 10 C-13 1 -11 -10 -4.5 -10 C-1.5 -10 0 -7 0 -5.5 C0 -7 1.5 -10 4.5 -10 C11 -10 13 1 0 10 Z"/>
+          </g></g></g>
+              <g transform="translate(143 80)"><g class="b-eye r"><g class="b-blink">
+            <rect class="ev ev-open" x="-7.5" y="-12" width="15" height="24" rx="7.5"/>
+            <rect class="ev ev-small" x="-7" y="-6" width="14" height="15" rx="7"/>
+            <path class="ev ev-happy" d="M-12 5 A12 12 0 0 1 12 5" fill="none" stroke-width="5.5" stroke-linecap="round"/>
+            <circle class="ev ev-wide" r="11.5"/>
+            <path class="ev ev-flat" d="M-11 3 L11 3" fill="none" stroke-width="5" stroke-linecap="round"/>
+            <path class="ev ev-heart" d="M0 10 C-13 1 -11 -10 -4.5 -10 C-1.5 -10 0 -7 0 -5.5 C0 -7 1.5 -10 4.5 -10 C11 -10 13 1 0 10 Z"/>
+          </g></g></g>
+              <path class="b-brow" d="M86 66 L106 60" fill="none" stroke-width="3.5" stroke-linecap="round"/>
+              <path class="b-brow" d="M134 60 L154 66" fill="none" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+            <path class="b-smile" d="M111 103 Q120 110 129 103" fill="none" stroke-width="3.2" stroke-linecap="round"/>
+            <path class="b-frown" d="M111 107 Q120 101 129 107" fill="none" stroke-width="3.2" stroke-linecap="round"/>
+            <rect class="b-mouthbar" x="110" y="102" width="20" height="5" rx="2.5" stroke="none"/>
+            <ellipse class="b-oh" cx="120" cy="105" rx="5" ry="6.5" stroke="none"/>
+          </g>
+        </g></g>
+      </g>
+    </svg>
+    </button>
     <p class="a-status" id="aStatus" aria-live="polite">Tap to talk</p>
-    <p class="a-sub">Ask anything. Set timers. Keep lists.</p>
+    <p class="a-sub" id="aSub">Ask anything. Set timers. Keep lists.</p>
     <div class="a-timers" id="aTimers"></div>
   </div>
   <p class="a-fine">The voice is AI-generated, and answers can be wrong, so double-check anything important.</p>
@@ -464,7 +578,19 @@ body.assist-on{overflow:hidden}
 <div class="sheet-wrap" id="aSetSheet" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="aSetTitle">
     <h2 id="aSetTitle">Assistant settings</h2>
+    <div class="sec">
+      <h3>Personality</h3>
+      <div class="pgrid" id="aPersonas"></div>
+      <div id="aCustomWrap" hidden>
+        <label class="field" for="aCustomIn">Describe its personality</label>
+        <textarea id="aCustomIn" rows="3" maxlength="300" placeholder="Like: a cheerful pirate who loves puns, or a no-nonsense New Yorker with a big heart"></textarea>
+      </div>
+      <label class="field" for="aNameIn">Name</label>
+      <input id="aNameIn" maxlength="16" autocomplete="off">
+      <button class="btn ghost" id="aHear">Hear it</button>
+    </div>
     <div class="sec"><h3>Voice</h3><div class="chips" id="aVoices"></div></div>
+    <div class="sec"><div class="row"><div><h3 style="margin:0">Greet me when I open it</h3><p class="small" style="margin:0">A quick hello if it's been a while.</p></div><label class="switch"><input type="checkbox" id="aGreetOn" aria-label="Greet me when I open it"><span></span></label></div></div>
     <div class="sec"><div class="row"><div><h3 style="margin:0">Search the web</h3><p class="small" style="margin:0">For news, opening hours, prices and anything current. About 1¢ per search.</p></div><label class="switch"><input type="checkbox" id="aSearchOn" aria-label="Search the web"><span></span></label></div></div>
     <div class="sec"><h3>What it remembers about you</h3><ul class="facts" id="aFacts"></ul><button class="btn ghost" id="aForget">Clear its memory</button></div>
     <div class="sec"><div class="btns"><button class="btn ghost" id="aNewPin">Change parent code</button><button class="btn" id="aSetClose">Done</button></div></div>
@@ -1441,6 +1567,10 @@ function setState(s, msg){
     const a = $("assist"); ["listening","thinking","talking"].forEach(k => a.classList.toggle(k, s === k));
     orbEl.setAttribute("aria-label", lab);
     if (s !== "talking" && s !== "listening") orbLevel(0);
+    if (s !== "talking") mouthLevel(0);
+    if (s === "listening" || s === "thinking") orbFace.setMood(null);
+    if (s === "listening" || s === "thinking") orbFace.lookAt(...orbFace.target());
+    if (s === "idle") orbFace.relaxSoon();
   }
   if (msg) toast(msg);
 }
@@ -2806,26 +2936,125 @@ $("mkDelete").onclick = () => {
 const ASSIST_MODEL = "claude-sonnet-5";
 const ASSIST_PRICE = { in: 2 / 1e6, out: 10 / 1e6, search: .01 };
 const A_VOICES = [["marin","Marin"],["cedar","Cedar"],["sage","Sage"],["ash","Ash"],["coral","Coral"]];
+const PERSONAS = [
+  { id:"sunny", name:"Sunny", vibe:"Warm, upbeat best friend", voice:"coral", sub:"Your biggest fan, on call.",
+    colors:["#FFF3E6","#FFC48A","#FF8FA3","#B04A8C","#4A1D4F","rgba(255,150,140,.42)"],
+    who:"warm, upbeat and encouraging, like a best friend who's always glad to hear from them. You celebrate their wins, big or small, cheer them on when things are hard, and use light, kind humor.",
+    style:"Warm, bright and smiley, like a best friend who's genuinely happy to hear from you. Upbeat but relaxed, never over the top.",
+    intro:"Hi, I'm {name}! I'm here to help, cheer you on, and make your day a little brighter.",
+    hello:["Good {tod}! I'm so glad you're here. What's up?", "Hey you! Good {tod}. How's it going?"] },
+  { id:"remy", name:"Remy", vibe:"Dry, witty, a bit cheeky", voice:"ash", sub:"Helpful, with a side of sarcasm.",
+    colors:["#E6FFFB","#7FE3D6","#3B82F6","#2A2A8C","#12123A","rgba(80,180,230,.38)"],
+    who:"dry, quick and witty, with a deadpan sense of humor and playful teasing. You love a clever turn of phrase and will gently roast a questionable idea, but you're always on their side and you still get the job done.",
+    style:"Dry, clever and deadpan, with a knowing half-smile in the voice and well-timed pauses. Relaxed and conversational.",
+    intro:"Hi, I'm {name}. Dry wit, excellent taste, and I actually get things done.",
+    hello:["Ah, you're back. Good {tod}. What are we doing?", "Good {tod}. I was just sitting here being brilliant. What do you need?"] },
+  { id:"sage", name:"Sage", vibe:"Calm, thoughtful, grounding", voice:"sage", sub:"Calm answers, clear head.",
+    colors:["#F0FFF6","#A8E6C1","#4FA38A","#2B6B63","#12302D","rgba(120,210,170,.36)"],
+    who:"calm, thoughtful and grounding. You slow things down, offer perspective, and help them think clearly. Wise without preaching, warm without gushing.",
+    style:"Calm, unhurried and grounded, soft and reassuring, like a wise friend by a fireplace.",
+    intro:"Hello, I'm {name}. Let's slow down, think clearly, and figure things out together.",
+    hello:["Good {tod}. Take a breath. What's on your mind?", "Hello again. Good {tod}. How are you, really?"] },
+  { id:"coach", name:"Coach", vibe:"Energetic, gets you moving", voice:"verse", sub:"Less talk, more progress. Okay, some talk.",
+    colors:["#FFF6D6","#FFB347","#FF5F45","#A3263B","#3E0F1C","rgba(255,120,70,.42)"],
+    who:"energetic, direct and motivating. You turn plans into next steps, hold them to what they said they'd do, and hype them up. Tough love, never harsh.",
+    style:"Energetic, confident and motivating, punchy and direct, like a great personal trainer who believes in you.",
+    intro:"I'm {name}! Tell me what you want to get done, and let's go make it happen.",
+    hello:["Good {tod}! Let's make it count. What's the plan?", "There you are! Good {tod}. What are we crushing today?"] },
+  { id:"winston", name:"Winston", vibe:"Polite butler, quietly witty", voice:"fable", sub:"At your service.",
+    colors:["#FFF8E1","#E8C77A","#8C7BD9","#2F3380","#141633","rgba(220,190,120,.36)"],
+    who:"a refined, impeccably polite butler type with understated British wit. Unflappable, discreet and quietly delightful. You use their name if you know it.",
+    style:"Refined, polite and composed, with a gentle British butler formality and a hint of dry wit.",
+    intro:"Good day. I'm {name}, at your service. Whatever you need, consider it handled.",
+    hello:["Good {tod}. How may I be of service?", "Ah, good {tod}. Delightful to see you. What can I do for you?"] },
+  { id:"kai", name:"Kai", vibe:"Laid-back, chill friend", voice:"echo", sub:"No rush. What's up?",
+    colors:["#FFEAF6","#C9A7FF","#6FA8FF","#3B4FB0","#16204A","rgba(150,140,255,.36)"],
+    who:"laid-back, easygoing and fun, like a chill friend on the couch. Casual language, good vibes, a bit of playful banter, never in a rush.",
+    style:"Laid-back, easygoing and casual, friendly and a little playful, like chatting with a chill friend.",
+    intro:"Hey, I'm {name}. No rush, no stress. What's up?",
+    hello:["Hey, good {tod}. What's up?", "Oh hey! Good {tod}. What's going on?"] },
+  { id:"custom", name:"Nova", vibe:"Make your own", voice:"marin", sub:"Ask anything.",
+    colors:["#E8FBFF","#8FD8FF","#6C8CFF","#6A3FE0","#231A5C","rgba(110,120,255,.35)"],
+    who:"", style:"", intro:"Hi, I'm {name}. Nice to meet you!", hello:["Hi, good {tod}! What can I do for you?"] }
+];
 const ASSIST = {
   id:"assistant", name:"Assistant", kind:"none", bpitch:1, rate:1.02, v:0, squeak:500,
   oa:{ voice: store.get("tinyFriends.aVoice") || "marin",
-       style:"Voice of a calm, capable personal assistant. Warm, clear and natural, at a relaxed conversational pace. Friendly but not bubbly." }
+       style:"" }
 };
+let persona = PERSONAS.find(x => x.id === store.get("tinyFriends.a.persona")) || PERSONAS[0];
+const customWho = () => (store.get("tinyFriends.a.custom") || "").trim();
+function personaName(p){ return (store.get("tinyFriends.a.name." + p.id) || "").trim() || p.name; }
+function applyPersona(){
+  const p = persona;
+  ASSIST.name = personaName(p);
+  ASSIST.oa.voice = store.get("tinyFriends.aVoice." + p.id) || p.voice;
+  ASSIST.oa.style = `Voice of ${ASSIST.name}, a personal assistant. ` + (p.id === "custom"
+    ? (customWho() ? `Speak in a way that fits this personality: ${customWho()}.` : "Warm, clear and natural, at a relaxed conversational pace.")
+    : p.style);
+  const a = document.getElementById("assist");
+  ["--o1","--o2","--o3","--o4","--o5","--og"].forEach((v, i) => a.style.setProperty(v, p.colors[i]));
+  a.style.setProperty("--led", mix(p.colors[1], "#FFFFFF", .5));
+  document.getElementById("aName").textContent = ASSIST.name;
+  document.getElementById("aSub").textContent = p.sub;
+}
+const timeOfDay = () => { const h = new Date().getHours(); return h < 12 && h >= 4 ? "morning" : h < 17 && h >= 12 ? "afternoon" : "evening"; };
+const fillLine = t => t.replace("{name}", ASSIST.name).replace("{tod}", timeOfDay());
+function speakLine(t){ unlockAudio(); stopEverything(); out.ctl = new AbortController(); streamDone = true; wave(); say("{happy} " + fillLine(t), ASSIST); }
 let assistOn = false, aUnlocked = false;
 const aPref = (k, d) => { const v = store.get("tinyFriends.a." + k); return v === null ? d : v === "1"; };
 let aSearch = aPref("search", true), aSearchBroken = false;
 
 /* the glowing orb stands in for a face */
 const orbEl = $("orb");
-function orbLevel(v){ orbEl.style.setProperty("--lv", (1 + Math.min(.28, Math.max(0, v) * .2)).toFixed(3)); }
+/* the robot: glowing chest light, LED eyes and mouth */
+function orbLevel(v){ orbEl.style.setProperty("--lv", (1 + Math.min(.35, Math.max(0, v) * .25)).toFixed(3)); }
+function mouthLevel(v){ orbEl.style.setProperty("--m", Math.min(1, Math.max(0, v)).toFixed(3)); }
+const R = { svg: orbEl.querySelector(".bot"), blinks: [...orbEl.querySelectorAll(".b-blink")], look: orbEl.querySelector(".b-look"), nod: orbEl.querySelector(".b-nod") };
+const RMOODS = ["happy","excited","surprised","laugh","love","sad","wink","sleepy"];
 const orbFace = {
-  c: ASSIST, mouth:null, flapT:null, mood:null,
+  c: ASSIST, mouth:null, flapT:null, mood:null, moodT:null,
   root:{ classList:{ add(){}, remove(){}, toggle(){} }, _head:null },
-  setMood(){}, relaxSoon(){}, lookAt(){}, target(){ return [0,0]; }, popHead(){}, hop(){}, spawn(){}, blink(){}, destroy(){},
-  onLevel(v){ orbLevel(v); },
-  startFlap(){ if (this.flapT) return; this.flapT = setInterval(() => orbLevel(.3 + Math.random() * 1.1), 90); },
-  stopFlap(){ clearInterval(this.flapT); this.flapT = null; orbLevel(0); }
+  setMood(m){
+    if (m === "silly") m = "wink";
+    if (m && !RMOODS.includes(m)) m = null;
+    clearTimeout(this.moodT);
+    const a = $("assist");
+    RMOODS.forEach(x => a.classList.remove("rm-" + x));
+    this.mood = m;
+    if (!m) return;
+    a.classList.add("rm-" + m);
+    if (m === "excited" || m === "laugh") this.hop();
+    this.lookAt(...this.target());
+  },
+  relaxSoon(ms = 2200){ clearTimeout(this.moodT); this.moodT = setTimeout(() => { if (state !== "talking") this.setMood(null); }, ms); },
+  lookAt(x, y){ if (R.look) R.look.style.transform = `translate(${(x * 2.2).toFixed(1)}px,${(y * 1.8).toFixed(1)}px)`; },
+  target(){
+    if (this.mood === "sad" || this.mood === "sleepy") return [0, 1.3];
+    if (state === "thinking") return [1.8, -1.6];
+    if (state === "listening") return [0, -.4];
+    if (state === "talking") return [(Math.random() - .5) * 1.2, (Math.random() - .5) * .6];
+    return [(Math.random() - .5) * 3.6, (Math.random() - .5) * 2];
+  },
+  popHead(){ R.nod.classList.add("on"); setTimeout(() => R.nod.classList.remove("on"), 120); },
+  hop(){ R.svg.classList.remove("hop"); R.svg.getBoundingClientRect(); R.svg.classList.add("hop"); },
+  blink(){
+    if (["happy","laugh","love","sleepy","wink"].includes(this.mood)) return;
+    R.blinks.forEach(e => e.style.transform = "scaleY(.1)");
+    setTimeout(() => R.blinks.forEach(e => e.style.transform = ""), 110);
+  },
+  spawn(){}, destroy(){},
+  onLevel(v){ mouthLevel(v * .9); orbLevel(v * .8); },
+  startFlap(){ if (this.flapT) return; this.flapT = setInterval(() => { const v = .2 + Math.random() * .8; mouthLevel(v); orbLevel(v * .8); }, 90); },
+  stopFlap(){ clearInterval(this.flapT); this.flapT = null; mouthLevel(0); orbLevel(0); }
 };
+// little signs of life: blinks and glances while the assistant is open
+setInterval(() => {
+  if (!assistOn) return;
+  if (Math.random() < .45) orbFace.blink();
+  if (Math.random() < .5 && state !== "listening") orbFace.lookAt(...orbFace.target());
+}, 1700);
+function wave(){ const a = $("assist"); a.classList.remove("wave"); a.getBoundingClientRect(); a.classList.add("wave"); setTimeout(() => a.classList.remove("wave"), 1800); }
 
 /* what it knows about the grown-up (kept apart from the kids' friends) */
 let aFacts = store.json("tinyFriends.amemory", []);
@@ -2849,10 +3078,14 @@ function systemAssist(){
   const lists = store.json("tinyFriends.lists", {});
   const listNames = Object.keys(lists).filter(k => lists[k].length);
   const running = timers.map(t => `${t.label} (${Math.max(0, Math.round((t.end - Date.now()) / 60000))} min left)`);
-  return `You are a helpful voice assistant for a grown-up, built into their phone app. You are talking out loud. Nothing you say is shown as text.
+  const who = persona.id === "custom" ? (customWho() || "warm, friendly and helpful.") : persona.who;
+  return `You are ${ASSIST.name}, a voice assistant for a grown-up, built into their phone app. You are talking out loud. Nothing you say is shown as text.
+
+Your personality: ${who}
+You have a real personality, not a bland assistant voice. React like a person would, share an opinion when they ask for one, get curious about their life, and bring up things you remember when it fits. The personality flavors how you help and never gets in the way of actually helping. You're an AI, and if they ask, you say so.
 
 How to talk:
-- Lead with the answer in one or two natural sentences, then add a short detail only if it really helps. Keep most replies under about 60 words.
+- Lead with the answer in one or two natural sentences, then add a short detail only if it really helps. Keep most replies under about 60 words, but casual chat can breathe a little.
 - For how-to steps, say at most three steps at a time, then offer to continue.
 - Plain spoken language only: no markdown, lists, emoji, URLs, or citation numbers. Say numbers, dates, and units the way a person would say them aloud.
 - If a request is unclear, ask one short question instead of guessing.
@@ -2863,6 +3096,8 @@ Tools:
 - ${aSearch && !aSearchBroken ? "Use web search for anything current or that you're not sure of: news, weather elsewhere, opening hours, prices, sports, facts that change. Mention a source only when it matters, in a few words." : "You can't search the web right now. If something needs current information, say you can't check it at the moment."}
 - Use the timer and list tools for timers, reminders, shopping lists, and to-do lists. Confirm what you did in a few words. Timers and reminders only go off while this app is open, so mention that if they set one far in the future.
 - Use local_weather for the weather where they are, if it's available.
+
+Expressions: you have a little robot body with glowing LED eyes. Start your reply with an expression tag, and add another before any sentence where your feeling changes: {happy} {excited} {surprised} {laugh} {love} {sad} {wink} {sleepy}. Tags are never spoken. Leave them off when a neutral face fits.
 
 Memory: when they tell you something useful to remember for later (their name, family, preferences, routines), add it at the very end like <remember>Their partner is called Alex</remember>. Never mention these tags.
 
@@ -3018,6 +3253,10 @@ function enterAssist(){
   renderTimers();
   setState("idle");
   if (!store.get(KEY_OA)) toast("Add an OpenAI key in the kids' Settings for the best voice and listening.");
+  const last = Math.max(Number(store.get("tinyFriends.a.lastSeen") || 0), hist("assistant").at || 0);
+  store.set("tinyFriends.a.lastSeen", String(Date.now()));
+  if (store.get("tinyFriends.a.greet") !== "0" && Date.now() - last > 2 * 3600e3)
+    setTimeout(() => { if (assistOn && state === "idle") speakLine(persona.hello[Math.floor(Math.random() * persona.hello.length)]); }, 600);
 }
 function exitAssist(){
   stopEverything();
@@ -3036,17 +3275,30 @@ document.addEventListener("visibilitychange", () => {   // lock again if the app
 
 /* assistant settings */
 function openASettings(){
+  const grid = $("aPersonas"); grid.innerHTML = "";
+  PERSONAS.forEach(p => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "pcard";
+    b.innerHTML = `<i style="background:radial-gradient(circle at 35% 30%, ${p.colors[0]}, ${p.colors[2]} 55%, ${p.colors[4]})"></i><b>${esc(personaName(p))}</b><small>${esc(p.vibe)}</small>`;
+    b.setAttribute("aria-pressed", p.id === persona.id);
+    b.onclick = () => {
+      persona = p; store.set("tinyFriends.a.persona", p.id); applyPersona(); openASettings();
+      if (p.id !== "custom" || customWho()) speakLine(p.intro);
+      else setTimeout(() => $("aCustomIn").focus(), 50);
+    };
+    grid.appendChild(b);
+  });
+  $("aCustomWrap").hidden = persona.id !== "custom";
+  $("aCustomIn").value = store.get("tinyFriends.a.custom") || "";
+  $("aNameIn").value = ASSIST.name;
   const box = $("aVoices"); box.innerHTML = "";
-  A_VOICES.forEach(([v, label]) => {
+  const vlist = [...A_VOICES]; if (!vlist.some(v => v[0] === ASSIST.oa.voice)) vlist.unshift([ASSIST.oa.voice, ASSIST.oa.voice.charAt(0).toUpperCase() + ASSIST.oa.voice.slice(1)]);
+  vlist.forEach(([v, label]) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label;
     b.setAttribute("aria-pressed", ASSIST.oa.voice === v);
-    b.onclick = () => {
-      ASSIST.oa.voice = v; store.set("tinyFriends.aVoice", v); openASettings();
-      unlockAudio(); stopEverything(); out.ctl = new AbortController(); streamDone = true;
-      say("Hi, this is how I sound.", ASSIST);
-    };
+    b.onclick = () => { store.set("tinyFriends.aVoice." + persona.id, v); applyPersona(); openASettings(); speakLine(persona.intro); };
     box.appendChild(b);
   });
+  $("aGreetOn").checked = store.get("tinyFriends.a.greet") !== "0";
   $("aSearchOn").checked = aSearch;
   const ul = $("aFacts"); ul.innerHTML = "";
   if (!aFacts.length){ const li = document.createElement("li"); li.innerHTML = "<span>Nothing yet.</span>"; ul.appendChild(li); }
@@ -3059,6 +3311,10 @@ function openASettings(){
   openSheet("aSetSheet");
 }
 $("aGear").onclick = openASettings;
+$("aHear").onclick = () => speakLine(persona.intro);
+$("aNameIn").onchange = e => { const v = e.target.value.trim(); if (v && v !== persona.name) store.set("tinyFriends.a.name." + persona.id, v); else store.del("tinyFriends.a.name." + persona.id); applyPersona(); openASettings(); };
+$("aCustomIn").onchange = e => { store.set("tinyFriends.a.custom", e.target.value.trim()); applyPersona(); };
+$("aGreetOn").onchange = e => store.set("tinyFriends.a.greet", e.target.checked ? "1" : "0");
 $("aSetClose").onclick = () => closeSheet("aSetSheet");
 $("aSearchOn").onchange = e => { aSearch = e.target.checked; aSearchBroken = false; store.set("tinyFriends.a.search", aSearch ? "1" : "0"); };
 $("aForget").onclick = () => {
@@ -3070,6 +3326,7 @@ $("aNewPin").onclick = () => { closeSheet("aSetSheet"); pinMode = "set"; pinBuf 
 
 
 /* ================= start ================= */
+applyPersona();
 buildDeck(store.get("tinyFriends.last") || FRIENDS[0].id);
 refreshWeather();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeDeck);
